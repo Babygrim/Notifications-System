@@ -1,0 +1,153 @@
+{% include 'header.html' %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div class="story-wrapper" style="display: flex; width: 100%; align-items: center; justify-content: center; flex-direction: column; margin-bottom: 5vh;">
+        <h1 style="font-size: 50px;">{{ context.story.title }}</h1>
+        <h2 style="font-size: 25px;">{{ context.story.creator_username }}</h2>
+        <h3 style="font-size: 25px;">{{ context.story.body }}</h3>
+    </div>
+
+    <h1 style="text-align: center; font-size: 40px; font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;">Story Comments</h1>
+    <div class="comment-form-wrapper" style="display: flex; justify-content: center; align-items: center;">
+        <form method="post" action="http://127.0.0.1:8000/comments/all_comments" style="display: flex; width: 500px; justify-content: center; align-items: center; border: solid 2px red; height: 200px; margin-top: 2vh; flex-direction: column;">
+            {% csrf_token %}
+            <input placeholder="Here goes your comment body" name='comment_body' style="width: 10vw; height: 20%; border: 1px grey; padding: 10px;">
+            <input type="hidden" name="post_id" value="{{ context.story.id }}">
+            <input type="hidden" name="next" value="{{ request.path }}">
+            <button type="submit">Create Comment</button>
+        </form>
+    </div>
+
+    <div class="comments-box-wrapper" style="display: flex; flex-direction: row; flex-wrap: wrap; padding: 40px; justify-content: center;">
+        {% for element in context.comments %}
+            {% if element.id == context.comment_id %}
+                <div class="comment-box" style="display: flex; width: 20rem; justify-content: center; padding: 10px; margin: 10px; flex-direction: column; border: solid 3px red;">
+            {% else %}
+                <div class="comment-box" style="display: flex; width: 20rem; justify-content: center; padding: 10px; margin: 10px; flex-direction: column; border: solid 1px black;">
+            {% endif %}
+
+                {% if element.creator_id != None %}
+                    <h2 style="text-align: left; padding: 2px; margin-bottom: 2px; ">{{ element.creator }}</h3>
+                {% else %}
+                    <h3 style="text-align: left; padding: 2px; margin-bottom: 2px; ">Anonymous Comment</h3>
+                {% endif %}
+                <p style="text-align: justify; font-size: 25px; font-family:Georgia, 'Times New Roman', Times, serif;">{{ element.comment_body }}</p>
+                <div class="buttons-wrapper" style="display: flex; flex-direction: row;">
+                    <button class="ViewReply" style="text-align: center; font-size: 20px; margin-right: 10px;" data-commentID="{{element.id}}">View Replies</button>
+                    <button class="leaveReply"  style="text-align: center; font-size: 20px;" data-commentID="{{element.id}}">Leave a Reply</button> 
+                </div>
+                <div class="form-wrapper" id="formWrapper" style="display: none; margin-top: 1em; justify-content: center; align-items: center;">
+                    <form method="post" action="http://127.0.0.1:8000/comments/replies/{{element.id}}" style="display: flex; width: 20em; justify-content: center; align-items: center; border: solid 2px red; height: 200px; margin-top: 2vh; flex-direction: column; padding: 5px;">
+                        {% csrf_token %}
+                        <input placeholder="Here goes your reply body" name='comment_body' style="width: 10vw; height: 20%; border: 1px grey; padding: 10px;">
+                        <input type="hidden" name="next" value="{{ request.path }}">
+                        <input type="hidden" name="parent_id" value="{{element.id}}">
+                        <input type="hidden" name="post_id" value="{{ context.story.id }}">
+                        <button type="submit">Reply</button>
+                    </form>
+                </div> 
+                <div class="replies-wrapper" id="repliesWrapper" style="display: none; margin-top: 1em;">
+                    <div class="replies" style="display: flex; width: 20em; justify-content: top; align-items: normal;  border: solid 2px red; height: 200px; margin-top: 2vh; flex-direction: column; padding: 5px; overflow: scroll; overflow-x: hidden;" id="repliesWindow">
+
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    
+
+</body>
+
+<script>
+    forms = document.getElementsByClassName('form-wrapper') //none
+    replies = document.getElementsByClassName('replies-wrapper') //none
+
+
+    replies_bound_box = document.getElementsByClassName('replies') //builder box
+
+    viewReplies = document.getElementsByClassName('ViewReply')  //view replies button
+    makeReplies = document.getElementsByClassName('leaveReply') //make reply button
+
+    for (let j = 0; j < viewReplies.length; j++ ){
+        viewReplies[j].addEventListener('click', function() { 
+            comment = viewReplies[j].getAttribute("data-commentID")
+            ViewReplies(comment, j) })
+
+        makeReplies[j].addEventListener('click', function() { ViewReplyForm(j) })
+    }
+
+    function ViewReplyForm(k) {
+        for (let i = 0; i < makeReplies.length; i++) {
+            forms[i].style.display = "none";
+            replies[i].style.display = "none";
+
+        }
+
+        forms[k].style.display = "flex"; 
+    }
+
+
+    function ViewReplies(comment_id, j) {
+        for (let i = 0; i < forms.length; i++) {
+            forms[i].style.display = "none";
+            replies[i].style.display = "none";
+        }
+
+        replies[j].style.display = "flex";
+
+        fetch(`http://127.0.0.1:8000/comments/replies/${comment_id}`, {
+            method:'GET',
+            headers:{
+                'Content-Type':'application/json',
+            }
+
+        })
+        .then(response => {
+                return response.json()
+        })
+        .then(response => {
+            createCards(response, j)
+        });
+    }
+
+    function createCards(data, j) {
+        cleaned_data = data.data;
+
+        for (let i = 0; i < cleaned_data.length; i++){
+            var comment_body = document.createElement("div");
+            comment_body.className = "reply-box";
+            comment_body.style.padding = "5px";
+            comment_body.style.borderBottom = "solid 1px lightgrey";
+            comment_body.style.width = "100%";
+            comment_body.style.textAlign = "left";
+
+            var comment_creator = document.createElement("h2");
+            var text = document.createTextNode(cleaned_data[i].creator);
+            comment_creator.appendChild(text);
+
+            comment_creator.style.textAlign = "left";
+            comment_creator.style.fontSize = "15px";
+            comment_creator.style.fontStyle = "italic";
+
+            var comment_text = document.createElement("h3");
+            var text = document.createTextNode(cleaned_data[i].comment_body);
+            comment_text.appendChild(text);
+
+            comment_text.style.textAlign = "left";
+            comment_text.style.fontSize = "15px";
+            
+            comment_body.appendChild(comment_creator);
+            comment_body.appendChild(comment_text);
+            replies_bound_box[j].appendChild(comment_body);
+        }
+        
+    }
+</script>
+
+</html>

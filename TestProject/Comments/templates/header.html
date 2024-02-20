@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+
+    {% block header %}
+    <style>
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+            /* Modal Content/Box */
+            .modal-content {
+                background-color: #fefefe;
+                margin: 15% auto; /* 15% from the top and centered */
+                padding: 20px;
+                border: 1px solid #888;
+                width: 20%; /* Could be more or less, depending on screen size */
+                overflow: hidden;
+        }
+
+            /* The Close Button */
+            .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+            .close:hover,
+            .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+
+    <div class="header" style="display: flex; margin-top: 1em; margin-bottom: 2em; width: 100%; flex-direction: row; align-items: center; justify-content: right; height: 10vh; background-color: antiquewhite;">
+        <input type="hidden" id="token"  name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+        <div class="stories-wrapper" style="display: flex; padding: 1em;">
+            <button onclick="location.href = 'http://127.0.0.1:8000/stories/all_stories/'" style="width: 10em; height: 2.5em; cursor: pointer;">All Stories</button>
+        </div>
+        {% if request.user.is_authenticated %}
+            <input type="hidden" id="user_id" value="{{request.user.id}}">
+
+            <div class="logout-wrapper" style="display: flex; padding: 1em;">
+                <button button onclick="location.href = 'http://127.0.0.1:8000/user/logout/'" style="width: 10em; height: 2.5em; cursor: pointer;">Logout</button>
+            </div>
+            
+            <div class="notifications-wrapper" style="display: flex; padding: 1em;">
+                <button class="dropdown" id="notifications" style="width: 10em; height: 2.5em;"></button>
+                    <div id="dropdown-options" style="display: none; width: 10rem; height: 20em; background-color: aqua; position: fixed;">
+                        <p>Text</p>
+                    </div>
+            </div>
+
+        {% else %}
+        <div class="auth-wrapper" style="display: flex;">
+            <button onclick="location.href = 'http://127.0.0.1:8000/user/login/'" style="width: 10em; height: 2.5em; cursor: pointer; margin: 1em;">Login</button>
+            <button onclick="location.href = 'http://127.0.0.1:8000/user/signup/'" style="width: 10em; height: 2.5em; cursor: pointer; margin: 1em;">Signup</button>
+        </div>
+        {% endif %}
+    </div>
+    <div id="myModal" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+          <span class="close">&times;</span>
+            <div class="notifications-wrapper" id="notifications-window" style="display: flex; width: 20em; justify-content: top; align-items: normal;  border: solid 2px red; height: 200px; margin-top: 2vh; flex-direction: column; padding: 5px; overflow: scroll; overflow-x: hidden;">
+
+            </div>
+        </div>
+      
+    </div>
+
+        <script>
+            window.addEventListener("DOMContentLoaded", getUserNotifications())
+
+            function getUserNotifications() {
+                var user = document.getElementById('user_id')
+
+                fetch(`http://127.0.0.1:8000/notifications/get_notifications/${user.value}`, {
+                    method: "GET",
+                    headers:{
+                        'Content-Type':'application/json',
+                    },
+                    })
+                    .then(response => {
+                            return response.json()
+                    })
+                    .then(response => {
+                        workData(response);
+                    });
+
+                
+            }
+
+            function workData(data) {
+                var button = document.getElementById('notifications')
+                var modal_content = document.getElementById('notifications-window')
+                button.textContent = `Notifications: ${data.story.length + data.comment.length}`
+                var token = document.getElementById('token')
+
+                for (let i = 0; i < data.story.length; i++){
+                    var comment_body = document.createElement("div");
+                    comment_body.className = "notification-box";
+                    comment_body.style.padding = "5px";
+                    comment_body.style.borderBottom = "solid 1px lightgrey";
+                    comment_body.style.width = "100%";
+                    comment_body.style.textAlign = "left";
+                    comment_body.style.cursor = "pointer";
+
+                    comment_body.addEventListener('click', function() {
+                        var url = `http://127.0.0.1:8000/stories/story/${data.story[i].post_id}?comment=${data.story[i].comment_id}`
+
+                        var fetch_url = `http://127.0.0.1:8000/notifications/mark_as_read/`
+
+                        fetch(fetch_url, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRFToken": token.value,
+                            },
+                            body: JSON.stringify({"note_id": data.story[i].id, "type": "story"})
+
+                        }).then(response => {
+                            window.location.replace(url);
+                        })
+                    })
+
+                    var content_text = document.createElement("h2");
+                    var text = document.createTextNode(`You received new commentary on your story '${data.story[i].post_title}' from User '${data.story[i].creator_username}'`);
+                    content_text.appendChild(text);
+
+                    content_text.style.textAlign = "left";
+                    content_text.style.fontSize = "15px";
+     
+                    comment_body.appendChild(content_text);
+                    modal_content.appendChild(comment_body);
+                }
+
+                for (let i = 0; i < data.comment.length; i++){
+                    var comment_body = document.createElement("div");
+                    comment_body.className = "notification-box";
+                    comment_body.style.padding = "5px";
+                    comment_body.style.borderBottom = "solid 1px lightgrey";
+                    comment_body.style.width = "100%";
+                    comment_body.style.textAlign = "left";
+                    comment_body.style.cursor = "pointer";
+
+                    comment_body.addEventListener('click', function() {
+                        var url = `http://127.0.0.1:8000/comments/view_reply/${data.comment[i].comment_id}?reply=${data.comment[i].reply_id}`
+
+                        var fetch_url = `http://127.0.0.1:8000/notifications/mark_as_read/`
+
+                        fetch(fetch_url, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRFToken": token.value,
+                            },
+                            body: JSON.stringify({"note_id": data.comment[i].id, "type": "comment"})
+                        }).then(response => {
+                            window.location.replace(url);
+                        })
+                    })
+
+                    var content_text = document.createElement("h2");
+                    var text = document.createTextNode(`You received new reply on your commentary on Story '${data.comment[i].post_title}' from User '${data.comment[i].creator_username}'`);
+                    content_text.appendChild(text);
+
+                    content_text.style.textAlign = "left";
+                    content_text.style.fontSize = "15px";
+                        
+                    comment_body.appendChild(content_text);
+                    modal_content.appendChild(comment_body);
+                }
+
+                setListeners()
+
+            }
+
+            function notificationsWindow() {
+                var dropdown = document.getElementById('dropdown-options')
+
+                if (dropdown.style.display == "none") {
+                    dropdown.style.display = "flex";
+                }
+                else {
+                    dropdown.style.display = "none";
+                }
+            }
+
+                var modal = document.getElementById("myModal");
+
+                // Get the button that opens the modal
+                var btn = document.getElementById("notifications");
+
+                // Get the <span> element that closes the modal
+                var span = document.getElementsByClassName("close")[0];
+
+                // When the user clicks on the button, open the modal
+                btn.onclick = function() {
+                    modal.style.display = "block";
+                }
+
+                // When the user clicks on <span> (x), close the modal
+                span.onclick = function() {
+                    modal.style.display = "none";
+                }
+
+                // When the user clicks anywhere outside of the modal, close it
+                window.onclick = function(event) {
+                    if (event.target == modal) {
+                        modal.style.display = "none";
+                    }
+                }
+
+                function setListeners (){
+                    var read_buttons = document.getElementsByClassName('mark-notification-read')
+
+                    for (let i = 0; i < read_buttons.length; i++) {
+                        read_buttons[i].addEventListener('click', function() {
+                            note_id = read_buttons[i].getAttribute('data-note_id')
+                            comment_type = read_buttons[i].getAttribute('data-comment_type')
+                            note_number = i
+
+
+
+                            // const child = document.getElementById('child');
+
+                            // const parentWithClass = child.closest('.parent');
+
+                            // console.log(parentWithClass); // 👉️ div.parent
+
+                            fetch ()
+                        })
+                    }
+                }
+
+                function getCookie(name) {
+                    var cookieValue = null;
+                    if (document.cookie && document.cookie != '') {
+                        var cookies = document.cookie.split(';');
+                        for (var i = 0; i < cookies.length; i++) {
+                            var cookie = jQuery.trim(cookies[i]);
+                            // Does this cookie string begin with the name we want?
+                            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+        </script>
+    {% endblock %}
+
+
+</body>
+</html>

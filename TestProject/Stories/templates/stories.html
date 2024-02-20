@@ -1,0 +1,35 @@
+{% include 'header.html' %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1 style="text-align: center; font-size: 40px; font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;">Stories</h1>
+    {% if request.user.is_authenticated %}
+        <div class="form-wrapper" style="display: flex; justify-content: center;">
+            <form method="post" action="http://127.0.0.1:8000/stories/all_stories/" style="display: flex; width: 500px; justify-content: center; align-items: center; border: solid 2px red; height: 200px; margin-top: 2vh; flex-direction: column;">
+                {% csrf_token %}
+                <input placeholder="Here goes your story title" name='title' style="width: 10vw; height: 20%; border: 1px grey; padding: 10px;">
+                <input placeholder="Here goes your story body" name='body' style="width: 10vw; height: 20%; border: 1px grey; padding: 10px;">
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <button type="submit">Create Story</button>
+            </form>
+        </div>
+    {% endif %}
+
+    <div class="comments-box-wrapper" style="display: flex; flex-direction: row; flex-wrap: wrap; padding: 40px; justify-content: center;">
+        {% for element in context %}
+            <a href="http://127.0.0.1:8000/stories/story/{{element.id}}/" style="text-decoration: none;">
+                <div class="comment-box" style="display: flex; width: 20rem; justify-content: center; padding: 10px; margin: 10px; flex-direction: column; border: solid 1px black;">
+                    <h1 style="color:darkgrey; font-size: 20px; font-family: Georgia, 'Times New Roman', Times, serif;">{{ element.creator_username }}</h1>
+                    <p style="text-align: justify; font-size: 25px; font-family:Georgia, 'Times New Roman', Times, serif;">{{ element.title }}</p>
+                </div>
+            </a>
+        {% endfor %}
+    </div>
+</body>
+</html>

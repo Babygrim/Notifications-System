@@ -1,0 +1,36 @@
+{% include 'header.html' %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <input type="hidden" id="highlight_id" value="{{ context.reply_id }}">
+    <div class="comments-wrapper" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <div class="comment-box" style="display: flex; width: 20rem; justify-content: center; padding: 10px; margin: 10px; flex-direction: column; border: solid 1px black;">
+            <h1 style="color:darkgrey; font-size: 20px; font-family: Georgia, 'Times New Roman', Times, serif; font-style: italic;">{{ context.comment.creator }}</h1>
+            <p style="text-align: justify; font-size: 25px; font-family:Georgia, 'Times New Roman', Times, serif;">{{ context.comment.comment_body }}</p>
+        </div>
+
+        <h2>Replies</h2>
+        <div class="replies-wrapper" style="display: flex; flex-direction: row; width: 80%; justify-content: center; align-items: center; flex-wrap: wrap;">
+            {% for element in context.replies %}
+                {% if element.id == context.reply_id %}
+                    <div class="comment-box" style="display: flex; width: 20rem; justify-content: center; padding: 10px; margin: 10px; flex-direction: column; border: solid 3px red; height: 10rem;">
+                {% else %}
+                    <div class="comment-box" style="display: flex; width: 20rem; justify-content: center; padding: 10px; margin: 10px; flex-direction: column; border: solid 1px black; height: 10rem;">
+                {% endif %}
+
+                    <h1 style="color:darkgrey; font-size: 20px; font-family: Georgia, 'Times New Roman', Times, serif; font-style: italic;">{{ element.creator }}</h1>
+                    <p style="text-align: justify; font-size: 25px; font-family:Georgia, 'Times New Roman', Times, serif; overflow: hidden;">{{ element.comment_body }}</p>
+                </div>
+            {% endfor %}
+        </div>
+
+    </div>
+
+</body>
+</html>
