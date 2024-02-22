@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from Stories.models import Post
 
+
 # Create your models here.
 class Comment(models.Model):
     creator = models.ForeignKey(User, on_delete=models.DO_NOTHING, blank=True, null=True)

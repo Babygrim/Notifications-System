@@ -4,8 +4,10 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('all_stories/', getAllStories, name="stories"),
-    path('story/<int:id>/', getSingleStory, name="story"),
-    path('getStoryPage', getStoryPage, name="story"),
+    path('', getAllStories, name="stories"),
+    path('story/<int:id>', getSingleStory, name="story"),
+    path('getStoryPage', getStoryPage, name="getstorypage"),
+    path('createStory', createStory, name='createstory'),
+    path('get_genres', getGenres, name='genres'),
     
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

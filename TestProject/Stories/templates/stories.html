@@ -1,4 +1,4 @@
-{% include 'header.html' %}
+{% extends "header.html" %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -7,55 +7,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
-<style>
-    .story-box {
-        display: flex; 
-        width: 20rem; 
-        height: 10rem;
-        justify-content: center; 
-        padding: 10px; 
-        margin: 10px; 
-        flex-direction: column; 
-        border: solid 1px black;
-    }
-
-    .story-user {
-        color:darkgrey; 
-        font-size: 20px; 
-        font-family: Georgia, 'Times New Roman', Times, serif;
-    }
-
-    .story-title {
-        text-align: justify; 
-        font-size: 25px; 
-        font-family:Georgia, 'Times New Roman', Times, serif;
-    }
-
-</style>
 <body>
-    <h1 style="text-align: center; font-size: 40px; font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;">Stories</h1>
-    {% if request.user.is_authenticated %}
-        <div class="form-wrapper" style="display: flex; justify-content: center;">
-            <form method="post" action="http://127.0.0.1:8000/stories/all_stories/" style="display: flex; width: 500px; justify-content: center; align-items: center; border: solid 2px red; height: 200px; margin-top: 2vh; flex-direction: column;">
-                {% csrf_token %}
-                <input placeholder="Here goes your story title" name='title' style="width: 20vw; height: 20%; border: 1px grey; padding: 10px;">
-                <input placeholder="Here goes your story body" name='body' style="width: 20vw; height: 20%; border: 1px grey; padding: 10px;">
-                <input type="hidden" name="next" value="{{ request.path }}">
-                <button type="submit" style="margin-top: 2em;">Create Story</button>
-            </form>
-        </div>
-    {% endif %}
+    {% block content %}
+    <style>
+        .story-box {
+            display: flex; 
+            width: 20rem; 
+            height: 10rem;
+            justify-content: center; 
+            padding: 10px; 
+            margin: 10px; 
+            flex-direction: column; 
+            border: solid 1px black;
+            cursor: pointer;
+        }
     
-    <div class="stories-box-wrapper" id="stories_box" style="display: flex; flex-direction: row; flex-wrap: wrap; padding: 40px; justify-content: center">
-        
-    </div>
+        .story-user {
+            color:darkgrey; 
+            font-size: 20px; 
+            font-family: Georgia, 'Times New Roman', Times, serif;
+        }
+    
+        .story-title {
+            text-align: justify; 
+            font-size: 25px; 
+            font-family:Georgia, 'Times New Roman', Times, serif;
+        }
+    
+    </style>
 
-    <div class="buttons-wrapper" style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
-        <button onclick="getPrevPage()"  class="page-button" id="next"  style="width: 5em; height: 2em; margin-right: 0.5em;">Previous</button> 
-        <p id="current" style="margin-left: 0.5em; margin-right: 0.5em;"></p>
-        <p> ... </p>
-        <p id="overall" style="margin-left: 0.5em; margin-right: 0.5em;"></p>
-        <button onclick="getNextPage()" class="page-button" id="prev" style="width: 5em; height: 2em; margin-left: 0.5em;">Next</button> 
+    <div class="content">
+        <h1 style="text-align: center; font-size: 40px; font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;">Stories</h1>
+        <div class="stories-box-wrapper" id="stories_box" style="display: flex; flex-direction: row; flex-wrap: wrap; padding: 40px; justify-content: center">
+            
+        </div>
+
+        <div class="buttons-wrapper" style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <button onclick="getPrevPage()"  class="page-button" id="next"  style="width: 5em; height: 2em; margin-right: 0.5em;">Previous</button> 
+            <p id="current" style="margin-left: 0.5em; margin-right: 0.5em;"></p>
+            <p> ... </p>
+            <p id="overall" style="margin-left: 0.5em; margin-right: 0.5em;"></p>
+            <button onclick="getNextPage()" class="page-button" id="prev" style="width: 5em; height: 2em; margin-left: 0.5em;">Next</button> 
+        </div>
     </div>
     
 
@@ -63,7 +56,6 @@
         window.addEventListener('DOMContentLoaded', getPage());
 
         function getNextPage() {
-            console.log('we clicking')
             var pages_data = JSON.parse(sessionStorage.getItem('pages_data'));
             if (pages_data.has_next == true) {
                 getPage(pages_data.current + 1)
@@ -71,7 +63,6 @@
         }
         
         function getPrevPage() {
-            console.log('we clicking')
             var pages_data = JSON.parse(sessionStorage.getItem('pages_data'));
             if (pages_data.has_previous == true) {
                 getPage(pages_data.current - 1)
@@ -80,7 +71,7 @@
 
 
         function getPage(page = 1) {
-            var url = `http://127.0.0.1:8000/stories/getStoryPage?page=${page}`;
+            var url = `http://127.0.0.1:8000/getStoryPage?page=${page}`;
             var current_page_num = document.getElementById('current');
             var total_page_num = document.getElementById('overall');
 
@@ -107,9 +98,9 @@
             stories_box.replaceChildren();
 
             for (let i = 0; i < data.length; i++) {
-                var body_link = document.createElement('a');
-                body_link.href = `http://127.0.0.1:8000/stories/story/${data[i].id}/`;
-                body_link.style.textDecoration = 'none';
+                var link = document.createElement('a');
+                link.href = `http://127.0.0.1:8000/story/${data[i].id}`;
+                link.style.textDecoration = "none";
 
                 var comment_box = document.createElement('div');
                 comment_box.className = "story-box";
@@ -124,8 +115,8 @@
 
                 comment_box.appendChild(creator);
                 comment_box.appendChild(title);
-                body_link.appendChild(comment_box);
-                stories_box.appendChild(body_link)
+                link.appendChild(comment_box);
+                stories_box.appendChild(link);
             }
 
             
@@ -133,5 +124,8 @@
         }
 
     </script>
+
+    
+    {% endblock %}
 </body>
 </html>

@@ -1,7 +1,6 @@
 from django.shortcuts import render
 from .models import *
 from django.http import HttpResponseRedirect
-from Comments.models import Comment
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 
@@ -10,20 +9,11 @@ from django.core.paginator import Paginator
 def getAllStories(request):
     if request.method == "GET":
         return render(request, 'stories.html')
-    elif request.method == "POST":
-        data = request.POST
-        create_story = Post(creator_id = request.user, post_title = data.get('title', "Story Title Lost"), post_text = data.get('body', 'Story Text Lost'))
-        create_story.save()
-        
-        return HttpResponseRedirect(data.get('next', '/'))
 
 def getSingleStory(request, id):
     post = Post.objects.get(pk=id)
-    story_comments = Comment.objects.filter(post=post)
-    
     context = {
         "story": post.serializer_single(),
-        "comments": [elem.serializer() for elem in story_comments],
         "comment_id": int(request.GET.get('comment', -1)),
     }
     
@@ -31,6 +21,7 @@ def getSingleStory(request, id):
     
 def getStoryPage(request):
     req_page = int(request.GET.get('page', 1))
+    
     stories = Post.objects.all().order_by('post_title')
     
     paginated_stories = Paginator(stories, per_page=10)
@@ -45,7 +36,26 @@ def getStoryPage(request):
                 "has_previous": get_page.has_previous(),
                 "overall": paginated_stories.num_pages,
             },
-            "stories": payload
+            "stories": payload,
     }
     
     return JsonResponse({"data": response})
+
+def createStory(request):
+    if request.method == "GET":
+        return render(request, 'create-story.html')
+    
+    elif request.method == "POST":
+        data = request.POST
+        genres = data.get('genre')
+        
+        
+        create_story = Post(creator_id = request.user, post_title = data.get('title', "Story Title Lost"), post_text = data.get('body', 'Story Text Lost'), genre=PostGenre.objects.get(pk=int(genres)))
+        create_story.save()
+        
+        return HttpResponseRedirect(data.get('next', '/'))
+    
+def getGenres(request):
+    if request.method == "GET":
+        genres = PostGenre.objects.all()     
+        return JsonResponse({"data": [genre.serializer() for genre in genres]}, safe=False)

@@ -6,67 +6,57 @@
     <title>Document</title>
 </head>
 <body>
-
-    {% block header %}
     <style>
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 1; /* Sit on top */
-            left: 0;
-            top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgb(0,0,0); /* Fallback color */
-            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        :root {
+            overflow-x: hidden;
+        }
+        .notification-box:hover {
+            background-color: lightsalmon;
+            transition: background-color 0.5s;
         }
 
-            /* Modal Content/Box */
-            .modal-content {
-                background-color: #fefefe;
-                margin: 15% auto; /* 15% from the top and centered */
-                padding: 20px;
-                border: 1px solid #888;
-                width: 20%; /* Could be more or less, depending on screen size */
-                overflow: hidden;
+        .notification-box {
+            background-color: lightgoldenrodyellow;
+            transition: background-color 0.5s;
         }
-
-            /* The Close Button */
-            .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
+        #notifications-window::-webkit-scrollbar{
+            display: none;
         }
-
-            .close:hover,
-            .close:focus {
-            color: black;
-            text-decoration: none;
+        .avatar {
+            border-radius: 50%;
+            width: 4em; /* Adjust as needed */
+            height: 4em; /* Adjust as needed */
+            object-fit: cover;
+            margin-right: 2em;
+            margin-left: 2em;
             cursor: pointer;
+        }
+        .profile-option {
+            background-color: lightgoldenrodyellow;
+            transition: background-color 0.3s;
+        }
+
+        .profile-option:hover {
+            background-color: lightsalmon;
+            transition: background-color 0.3s;
         }
     </style>
 
-    <div class="header" style="display: flex; margin-top: 1em; margin-bottom: 2em; width: 100%; flex-direction: row; align-items: center; justify-content: right; height: 10vh; background-color: antiquewhite;">
+    <div class="header" style="display: flex; margin: none; width: 100%; flex-direction: row; align-items: center; justify-content: right; height: 10vh; background-color: antiquewhite;">
         <input type="hidden" id="token"  name="csrfmiddlewaretoken" value="{{ csrf_token }}">
         <div class="stories-wrapper" style="display: flex; padding: 1em;">
-            <button onclick="location.href = 'http://127.0.0.1:8000/stories/all_stories/'" style="width: 10em; height: 2.5em; cursor: pointer;">All Stories</button>
+            <button onclick="location.href = 'http://127.0.0.1:8000/'" style="width: 10em; height: 2.5em; cursor: pointer;">All Stories</button>
         </div>
         {% if request.user.is_authenticated %}
             <input type="hidden" id="user_id" value="{{request.user.id}}">
-
             <div class="logout-wrapper" style="display: flex; padding: 1em;">
                 <button button onclick="location.href = 'http://127.0.0.1:8000/user/logout/'" style="width: 10em; height: 2.5em; cursor: pointer;">Logout</button>
             </div>
             
             <div class="notifications-wrapper" style="display: flex; padding: 1em;">
-                <button class="dropdown" id="notifications" style="width: 10em; height: 2.5em;"></button>
-                    <div id="dropdown-options" style="display: none; width: 10rem; height: 20em; background-color: aqua; position: fixed;">
-                        <p>Text</p>
-                    </div>
+                <button class="dropdown" id="notifications" style="width: 10em; height: 2.5em; cursor: pointer;"></button>
             </div>
-
+            <img src="https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885_1280.jpg" class="avatar" alt="User Avatar" id="profile_options">
         {% else %}
         <div class="auth-wrapper" style="display: flex;">
             <button onclick="location.href = 'http://127.0.0.1:8000/user/login/'" style="width: 10em; height: 2.5em; cursor: pointer; margin: 1em;">Login</button>
@@ -74,201 +64,213 @@
         </div>
         {% endif %}
     </div>
-    <div id="myModal" class="modal">
 
-        <!-- Modal content -->
-        <div class="modal-content">
-          <span class="close">&times;</span>
-            <div class="notifications-wrapper" id="notifications-window" style="display: flex; width: 20em; justify-content: top; align-items: normal;  border: solid 2px red; height: 200px; margin-top: 2vh; flex-direction: column; padding: 5px; overflow: scroll; overflow-x: hidden;">
-
+    <div class="dropdown-wrapper" id="clickable_note_zone" style="display: flex; width: 100%; height: 30rem; background-color: rgba(0, 0, 0, 0.2); justify-content: right; background: transparent; position: absolute; pointer-events: none;">
+        <div id="dropdown_options" style="display: none; flex-direction: column; width: 25rem; height: 100%; background-color: lightgoldenrodyellow; border-radius: 10px 10px 10px 10px; margin-right: 5em; z-index: 999; pointer-events: auto;">
+            <div class="heading-wrapper" style="width: 100%; height: 10%;  border-bottom: 1px solid rgba(0, 0, 0, 0.2);">
+                <h3 style="font-family: Verdana, Geneva, Tahoma, sans-serif; margin-left: 1em; margin-top: 0.25em; margin-bottom: 0.25em; padding: 5px;">Notifications</h3>
+            </div>
+            <div class="notifications-list-wrapper" id="notifications_window"  style="display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: left; align-items: top; overflow: auto; overflow-x: hidden; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+            
             </div>
         </div>
-      
     </div>
 
-        <script>
-            window.addEventListener("DOMContentLoaded", getUserNotifications());
-
-            function getUserNotifications() {
-                var user = document.getElementById('user_id')
-
-                fetch(`http://127.0.0.1:8000/notifications/get_notifications/${user.value}`, {
-                    method: "GET",
-                    headers:{
-                        'Content-Type':'application/json',
-                    },
-                    })
-                    .then(response => {
-                            return response.json()
-                    })
-                    .then(response => {
-                        workData(response);
-                    });
-
+    <div class="profile-dropdown-wrapper" id="clickable_profile_zone"  style="display: flex; width: 100%; height: 30rem; background-color: rgba(0, 0, 0, 0.2); justify-content: right; background: transparent; position: absolute; pointer-events: none;">
+        <div id="profile_dropdown_options" style="display: none; width: 15rem; height: min-content; background-color: lightgoldenrodyellow; border-radius: 10px 10px 10px 10px; z-index: 999; pointer-events: auto; margin-right: 1em; flex-direction: column;">
+            
+            <div class="heading-wrapper" style="width: 100%; height: 10%;  border-bottom: 1px solid rgba(0, 0, 0, 0.2);">
+                <h3 style="font-family: Verdana, Geneva, Tahoma, sans-serif; margin-left: 0.4em; margin-top: 0.25em; margin-bottom: 0.25em; padding: 5px;">Profile</h3>
+            </div>
                 
+            <div class="profile-option" style="width: 100%;">
+                <a href="http://127.0.0.1:8000/user/view_profile/{{request.user.id}}" style="display: flex; text-decoration: none; height: 100%;">
+                    <div class="profile-link"">
+                        <h3 style="font-size: 0.8rem; font-family: Verdana, Geneva, Tahoma, sans-serif; margin-left: 1em; margin-top: 1em;">View User Profile</h3>
+                    </div>
+                </a>
+            </div>
+
+            <div class="profile-option" style="width: 100%">
+                <a href="http://127.0.0.1:8000/createStory" style="display: flex; text-decoration: none; height: 100%;">
+                    <div class="create-story-link">
+                        <h3 style="font-size: 0.8rem; font-family: Verdana, Geneva, Tahoma, sans-serif; margin-left: 1em;">Create Story</h3>
+                    </div>
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener("DOMContentLoaded", getUserNotifications(1));
+        var notification_dropdown = document.getElementById('dropdown_options');
+        var toggleButton = document.getElementById('notifications');
+        var profilePicture = document.getElementById('profile_options')
+        var profile_dropdown = document.getElementById('profile_dropdown_options');
+
+        var clickable_note_zone = document.getElementById('clickable_note_zone');
+        var clickable_profile_zone = document.getElementById('clickable_profile_zone');
+
+        var scrollable_note_window_part = document.getElementById('notifications_window');
+        
+        var notification_pages_info = null;
+
+        scrollable_note_window_part.addEventListener('scroll', function lazyLoad(){
+            if( scrollable_note_window_part.scrollTop === (scrollable_note_window_part.scrollHeight - scrollable_note_window_part.offsetHeight)){
+                if (notification_pages_info.has_next) {
+                    getUserNotifications(notification_pages_info.current + 1);
+                }
             }
+        })
 
-            function workData(data) {
-                var button = document.getElementById('notifications')
-                var modal_content = document.getElementById('notifications-window')
-                button.textContent = `Notifications: ${data.story.length + data.comment.length}`
-                var token = document.getElementById('token')
+        window.addEventListener('click', function(event) {
+            if (event.target == profilePicture){
+                notification_dropdown.style.display = "none";
+                profile_dropdown.style.display = "none" ? "flex": "none";
+            }
+            else if (event.target == toggleButton) {
+                profile_dropdown.style.display = "none";
+                notification_dropdown.style.display = "none" ? "flex": "none";
+            }
+            else if (event.target != toggleButton & event.target != profilePicture & !clickable_note_zone.contains(event.target) & !clickable_profile_zone.contains(event.target)){
+                notification_dropdown.style.display = "none";
+                profile_dropdown.style.display = "none";
+            }
+            else {
+                //pass
+            }
+        });
 
-                for (let i = 0; i < data.story.length; i++){
-                    var comment_body = document.createElement("div");
-                    comment_body.className = "notification-box";
-                    comment_body.style.padding = "5px";
-                    comment_body.style.borderBottom = "solid 1px lightgrey";
-                    comment_body.style.width = "100%";
-                    comment_body.style.textAlign = "left";
-                    comment_body.style.cursor = "pointer";
+        function getUserNotifications(page) {
+            var user = document.getElementById('user_id')
 
+            fetch(`http://127.0.0.1:8000/notifications/get_notifications/${user.value}?page=${page}`, {
+                method: "GET",
+                headers:{
+                    'Content-Type':'application/json',
+                },
+                })
+                .then(response => {
+                        return response.json()
+                })
+                .then(response => {
+                    notification_pages_info = response.data.page;
+                    CreateNotificationsBoxes(response.data);
+                });
+
+            
+        }
+
+        function CreateNotificationsBoxes(data) {
+            var button = document.getElementById('notifications')
+            var modal_content = document.getElementById('notifications_window')
+            if (notification_pages_info.overall > 6){
+                button.textContent = `Notifications: 5+`;
+            }
+            else {
+                button.textContent = `Notifications: ${notification_pages_info.overall}`;
+            }
+            var token = document.getElementById('token')
+
+            for (let i = 0; i < data.notifications.length; i++){
+                var comment_body = document.createElement("div");
+                comment_body.className = "notification-box";
+                comment_body.style.padding = "5px";
+                comment_body.style.width = "100%";
+                comment_body.style.textAlign = "justify";
+                comment_body.style.cursor = "pointer";
+
+                if (data.notifications[i].admin) {
+                    var content_text = document.createElement("h2");
+                    content_text.innerHTML = data.notifications[i].message + ` Lasts Until: ${data.notifications[i].expiration_date}.`;
+                }
+                else if (data.notifications[i].story) {
                     comment_body.addEventListener('click', function() {
-                        var url = `http://127.0.0.1:8000/stories/story/${data.story[i].post_id}?comment=${data.story[i].comment_id}`
+                        var links = document.getElementsByClassName('notification-link');
+                        var elementsArray = Array.from(links);
 
-                        var fetch_url = `http://127.0.0.1:8000/notifications/mark_as_read/`
+                        if (elementsArray.every(link => event.target != link)) {
 
-                        fetch(fetch_url, {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRFToken": token.value,
-                            },
-                            body: JSON.stringify({"note_id": data.story[i].id, "type": "story"})
+                            var url = `http://127.0.0.1:8000/story/${data.notifications[i].post_id}?comment=${data.notifications[i].comment_id}`
 
-                        }).then(response => {
-                            window.location.replace(url);
-                        })
+                            var fetch_url = `http://127.0.0.1:8000/notifications/mark_as_read/`
+
+                            fetch(fetch_url, {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "X-CSRFToken": token.value,
+                                },
+                                body: JSON.stringify({"note_id": data.notifications[i].id, "type": "story"})
+
+                            }).then(response => {
+                                window.location.replace(url);
+                            })
+                        }
                     })
 
                     var content_text = document.createElement("h2");
-                    var text = document.createTextNode(`You received new commentary on your story '${data.story[i].post_title}' from User '${data.story[i].creator_username}'`);
-                    content_text.appendChild(text);
-
-                    content_text.style.textAlign = "left";
-                    content_text.style.fontSize = "15px";
-     
-                    comment_body.appendChild(content_text);
-                    modal_content.appendChild(comment_body);
-                }
-
-                for (let i = 0; i < data.comment.length; i++){
-                    var comment_body = document.createElement("div");
-                    comment_body.className = "notification-box";
-                    comment_body.style.padding = "5px";
-                    comment_body.style.borderBottom = "solid 1px lightgrey";
-                    comment_body.style.width = "100%";
-                    comment_body.style.textAlign = "left";
-                    comment_body.style.cursor = "pointer";
-
-                    comment_body.addEventListener('click', function() {
-                        var url = `http://127.0.0.1:8000/comments/view_reply/${data.comment[i].comment_id}?reply=${data.comment[i].reply_id}`
-
-                        var fetch_url = `http://127.0.0.1:8000/notifications/mark_as_read/`
-
-                        fetch(fetch_url, {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRFToken": token.value,
-                            },
-                            body: JSON.stringify({"note_id": data.comment[i].id, "type": "comment"})
-                        }).then(response => {
-                            window.location.replace(url);
-                        })
-                    })
-
-                    var content_text = document.createElement("h2");
-                    var text = document.createTextNode(`You received new reply on your commentary on Story '${data.comment[i].post_title}' from User '${data.comment[i].creator_username}'`);
-                    content_text.appendChild(text);
-
-                    content_text.style.textAlign = "left";
-                    content_text.style.fontSize = "15px";
-                        
-                    comment_body.appendChild(content_text);
-                    modal_content.appendChild(comment_body);
-                }
-
-                setListeners()
-
-            }
-
-            function notificationsWindow() {
-                var dropdown = document.getElementById('dropdown-options')
-
-                if (dropdown.style.display == "none") {
-                    dropdown.style.display = "flex";
+                    content_text.innerHTML = `You received new commentary on your story <a href="http://127.0.0.1:8000/story/${data.notifications[i].post_id}" class="notification-link">${data.notifications[i].post_title}</a> from User <a href="http://example.com" class="notification-link">${data.notifications[i].creator_username}</a>`;
                 }
                 else {
-                    dropdown.style.display = "none";
+                    comment_body.addEventListener('click', function() {
+                        var links = document.getElementsByClassName('notification-link');
+                        var elementsArray = Array.from(links);
+
+                        if (elementsArray.every(link => event.target != link)) {
+
+                            var url = `http://127.0.0.1:8000/story/${data.notifications[i].post_id}?comment=${data.notifications[i].comment_id}`
+
+                            var fetch_url = `http://127.0.0.1:8000/notifications/mark_as_read/`
+
+                            fetch(fetch_url, {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "X-CSRFToken": token.value,
+                                },
+                                body: JSON.stringify({"note_id": data.notifications[i].id, "type": "comment"})
+
+                            }).then(response => {
+                                window.location.replace(url);
+                            })
+                        }
+                    })
+
+                    var content_text = document.createElement("h2");
+                    content_text.innerHTML = `You received new reply on your commentary on Story <a href="http://127.0.0.1:8000/story/${data.notifications[i].post_id}" class="notification-link">${data.notifications[i].post_title}</a> from User <a href="http://example.com" class="notification-link">${data.notifications[i].creator_username}</a>`;
                 }
+                content_text.style.textAlign = "left";
+                content_text.style.fontSize = "15px";
+                content_text.style.padding = "5px";
+    
+                comment_body.appendChild(content_text);
+                modal_content.appendChild(comment_body);
             }
 
-                var modal = document.getElementById("myModal");
-
-                // Get the button that opens the modal
-                var btn = document.getElementById("notifications");
-
-                // Get the <span> element that closes the modal
-                var span = document.getElementsByClassName("close")[0];
-
-                // When the user clicks on the button, open the modal
-                btn.onclick = function() {
-                    modal.style.display = "block";
-                }
-
-                // When the user clicks on <span> (x), close the modal
-                span.onclick = function() {
-                    modal.style.display = "none";
-                }
-
-                // When the user clicks anywhere outside of the modal, close it
-                window.onclick = function(event) {
-                    if (event.target == modal) {
-                        modal.style.display = "none";
+        }
+        
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie != '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
                     }
                 }
+            }
+            return cookieValue;
+        }
 
-                function setListeners (){
-                    var read_buttons = document.getElementsByClassName('mark-notification-read')
+    </script>
 
-                    for (let i = 0; i < read_buttons.length; i++) {
-                        read_buttons[i].addEventListener('click', function() {
-                            note_id = read_buttons[i].getAttribute('data-note_id')
-                            comment_type = read_buttons[i].getAttribute('data-comment_type')
-                            note_number = i
-
-
-
-                            // const child = document.getElementById('child');
-
-                            // const parentWithClass = child.closest('.parent');
-
-                            // console.log(parentWithClass); // 👉️ div.parent
-
-                            fetch ()
-                        })
-                    }
-                }
-
-                function getCookie(name) {
-                    var cookieValue = null;
-                    if (document.cookie && document.cookie != '') {
-                        var cookies = document.cookie.split(';');
-                        for (var i = 0; i < cookies.length; i++) {
-                            var cookie = jQuery.trim(cookies[i]);
-                            // Does this cookie string begin with the name we want?
-                            if (cookie.substring(0, name.length + 1) == (name + '=')) {
-                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                                break;
-                            }
-                        }
-                    }
-                    return cookieValue;
-                }
-        </script>
+    {% block content %}
     {% endblock %}
-
 
 </body>
 </html>
