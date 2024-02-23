@@ -5,6 +5,7 @@ from Stories.models import Post
 from django.http import JsonResponse
 from Notifications.models import *
 from django.core.paginator import Paginator
+import json
 
 # Create your views here.
   
@@ -13,13 +14,13 @@ def getCommentReplies(request):
         comment_id = request.GET.get('parent')
         req_page = request.GET.get('page', 1)
         
-        get_all_replies = CommentReply.objects.filter(parent_comment_id = comment_id)
+        get_all_replies = Comment.objects.filter(parent_comment__id = comment_id).order_by('-date_created')
         
-        paginated = Paginator(get_all_replies, per_page=4)
+        paginated = Paginator(get_all_replies, per_page=10)
 
         get_page = paginated.get_page(req_page)
     
-        payload = [elem.serializer_all() for elem in get_page.object_list]
+        payload = [elem.serializer() for elem in get_page.object_list]
 
         response = {
                 "page": {
@@ -37,20 +38,24 @@ def getCommentReplies(request):
         story = Post.objects.get(pk=data.get('post_id'))
         get_comment = Comment.objects.get(pk=data.get('parent_id'))
         
-        
+    
         if request.user.id:
-            reply_to_comment = CommentReply(creator = request.user, parent_comment_id = data.get('parent_id'), comment_body = data.get('comment_body', 'Reply Text Got Lost'))
+            reply_to_comment = Comment(creator = request.user, post = story, parent_comment = get_comment, comment_body = data.get('comment_body', 'Reply Text Got Lost'))
             reply_to_comment.save()
+            
             if get_comment.creator:
-                notification = UserCommentRepliedNotification(receiver = get_comment.creator.id, source=get_comment, parent_source = story, creator = request.user, reply_comment=reply_to_comment)
+                notification = UserCommentRepliedNotification(receiver = get_comment.creator.id, source=get_comment, parent_source = story, creator = request.user)
                 notification.save()
         else:
-            reply_to_comment = CommentReply(parent_comment_id = data.get('parent_id'), comment_body = data.get('comment_body', 'Reply Text Got Lost'))
+            reply_to_comment = Comment(parent_comment = get_comment, comment_body = data.get('comment_body', 'Reply Text Got Lost'))
             reply_to_comment.save()
+            
             if get_comment.creator:
-                notification = UserCommentRepliedNotification(receiver = get_comment.creator.id, source=get_comment, parent_source = story, reply_comment=reply_to_comment)
+                notification = UserCommentRepliedNotification(receiver = get_comment.creator.id, source=get_comment, parent_source = story)
                 notification.save()
         
+        get_comment.replies_count += 1
+        get_comment.save()
         return HttpResponseRedirect(data.get('next', '/'))
         
 def getStoryComments(request):
@@ -58,7 +63,7 @@ def getStoryComments(request):
         story_id = request.GET.get('story_id')
         req_page = request.GET.get('page', 1)
         
-        get_comments = Comment.objects.filter(post=Post.objects.get(pk=story_id))
+        get_comments = Comment.objects.filter(post=Post.objects.get(pk=story_id), parent_comment = None).order_by('-date_created')
         paginated_comments = Paginator(get_comments, per_page=10)
         get_page = paginated_comments.get_page(req_page)
         
@@ -95,3 +100,58 @@ def getStoryComments(request):
        
         
         return HttpResponseRedirect(data.get('next', '/'))
+
+def LikeUnlikeComment(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        comment_id = int(data.get('comment_id'))
+        sessionData = request.session.get('reactions')
+        submission_type = data.get('type')
+        get_comment = Comment.objects.get(pk = comment_id)
+        
+        if sessionData == None:
+            request.session['reactions'] = {
+                    'likes': {},
+                    'dislikes': {},
+                }
+            request.session.save()
+            sessionData = request.session.get('reactions')
+        
+        # work with sessionData variable
+        check_comment_liked = True if str(comment_id) in sessionData['likes'].keys() else False
+        check_comment_disliked = True if str(comment_id) in sessionData['dislikes'].keys() else False
+        
+        if submission_type == 'like':
+            if check_comment_liked:
+                get_comment.likes_count -= 1
+                get_comment.save()
+                sessionData['likes'].pop(str(comment_id), None)
+            else:
+                get_comment.likes_count += 1
+                get_comment.save()
+                sessionData['likes'].update({comment_id: True})
+                
+                if check_comment_disliked:
+                    get_comment.dislikes_count -= 1
+                    get_comment.save()
+                    sessionData['dislikes'].pop(str(comment_id), None)
+                            
+        elif submission_type == 'dislike':
+            if check_comment_disliked:
+                get_comment.dislikes_count -= 1
+                get_comment.save()
+                sessionData['dislikes'].pop(str(comment_id), None)
+            else:
+                get_comment.dislikes_count += 1
+                get_comment.save()
+                sessionData['dislikes'].update({comment_id: True})
+                
+                if check_comment_liked:
+                    get_comment.likes_count -= 1
+                    get_comment.save()
+                    sessionData['likes'].pop(str(comment_id), None)
+                
+        request.session['reactions'] = sessionData
+        request.session.save()
+
+        return JsonResponse({"data": get_comment.serialize_update()}, safe=False)

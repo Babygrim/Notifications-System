@@ -17,7 +17,7 @@ def getUserNotifications(request, id):
 
     model_combination = list(chain(administrative_note, story_commented_note, comment_replied_note))
     
-    paginated_stories = Paginator(model_combination, per_page=6)
+    paginated_stories = Paginator(model_combination, per_page=5)
     get_page = paginated_stories.get_page(req_page)
     
     payload = [elem.serialize() for elem in get_page.object_list]

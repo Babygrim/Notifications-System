@@ -18,6 +18,8 @@
         .notification-box {
             background-color: lightgoldenrodyellow;
             transition: background-color 0.5s;
+            font-size: 1rem;
+            font-style: normal;
         }
         #notifications-window::-webkit-scrollbar{
             display: none;
@@ -49,10 +51,7 @@
         </div>
         {% if request.user.is_authenticated %}
             <input type="hidden" id="user_id" value="{{request.user.id}}">
-            <div class="logout-wrapper" style="display: flex; padding: 1em;">
-                <button button onclick="location.href = 'http://127.0.0.1:8000/user/logout/'" style="width: 10em; height: 2.5em; cursor: pointer;">Logout</button>
-            </div>
-            
+
             <div class="notifications-wrapper" style="display: flex; padding: 1em;">
                 <button class="dropdown" id="notifications" style="width: 10em; height: 2.5em; cursor: pointer;"></button>
             </div>
@@ -71,7 +70,7 @@
                 <h3 style="font-family: Verdana, Geneva, Tahoma, sans-serif; margin-left: 1em; margin-top: 0.25em; margin-bottom: 0.25em; padding: 5px;">Notifications</h3>
             </div>
             <div class="notifications-list-wrapper" id="notifications_window"  style="display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: left; align-items: top; overflow: auto; overflow-x: hidden; font-family: Verdana, Geneva, Tahoma, sans-serif;">
-            
+                
             </div>
         </div>
     </div>
@@ -80,7 +79,7 @@
         <div id="profile_dropdown_options" style="display: none; width: 15rem; height: min-content; background-color: lightgoldenrodyellow; border-radius: 10px 10px 10px 10px; z-index: 999; pointer-events: auto; margin-right: 1em; flex-direction: column;">
             
             <div class="heading-wrapper" style="width: 100%; height: 10%;  border-bottom: 1px solid rgba(0, 0, 0, 0.2);">
-                <h3 style="font-family: Verdana, Geneva, Tahoma, sans-serif; margin-left: 0.4em; margin-top: 0.25em; margin-bottom: 0.25em; padding: 5px;">Profile</h3>
+                <h3 style="font-family: Verdana, Geneva, Tahoma, sans-serif; margin-left: 0.4em; margin-top: 0.25em; margin-bottom: 0.25em; padding: 5px;">{{request.user.username}}</h3>
             </div>
                 
             <div class="profile-option" style="width: 100%;">
@@ -99,11 +98,19 @@
                 </a>
             </div>
 
+            <div class="profile-option" style="width: 100%">
+                <a href="http://127.0.0.1:8000/user/logout/" style="display: flex; text-decoration: none; height: 100%;">
+                    <div class="logout-link">
+                        <h3 style="font-size: 0.8rem; font-family: Verdana, Geneva, Tahoma, sans-serif; margin-left: 1em;">Log Out</h3>
+                    </div>
+                </a>
+            </div>
+
         </div>
     </div>
 
     <script>
-        window.addEventListener("DOMContentLoaded", getUserNotifications(1));
+        // window.addEventListener("DOMContentLoaded", getUserNotifications(1));
         var notification_dropdown = document.getElementById('dropdown_options');
         var toggleButton = document.getElementById('notifications');
         var profilePicture = document.getElementById('profile_options')
@@ -116,22 +123,35 @@
         
         var notification_pages_info = null;
 
-        scrollable_note_window_part.addEventListener('scroll', function lazyLoad(){
-            if( scrollable_note_window_part.scrollTop === (scrollable_note_window_part.scrollHeight - scrollable_note_window_part.offsetHeight)){
-                if (notification_pages_info.has_next) {
-                    getUserNotifications(notification_pages_info.current + 1);
-                }
-            }
-        })
-
         window.addEventListener('click', function(event) {
             if (event.target == profilePicture){
                 notification_dropdown.style.display = "none";
-                profile_dropdown.style.display = "none" ? "flex": "none";
+
+                if (profile_dropdown.style.display == "none") {
+                    profile_dropdown.style.display = "flex";
+                }
+                else {
+                    profile_dropdown.style.display = "none";
+                }
+
             }
             else if (event.target == toggleButton) {
                 profile_dropdown.style.display = "none";
-                notification_dropdown.style.display = "none" ? "flex": "none";
+                
+                if (notification_dropdown.style.display == "none") {
+                    notification_dropdown.style.display = "flex";
+                    
+                    var children = scrollable_note_window_part.getElementsByClassName('notification-box');
+                    if (children.length === 0) {
+                        getUserNotifications(1);
+                    }
+                    
+                }
+                else {
+                    notification_dropdown.style.display = "none";
+                }
+
+
             }
             else if (event.target != toggleButton & event.target != profilePicture & !clickable_note_zone.contains(event.target) & !clickable_profile_zone.contains(event.target)){
                 notification_dropdown.style.display = "none";
@@ -156,6 +176,7 @@
                 })
                 .then(response => {
                     notification_pages_info = response.data.page;
+                    console.log(response)
                     CreateNotificationsBoxes(response.data);
                 });
 
@@ -165,6 +186,7 @@
         function CreateNotificationsBoxes(data) {
             var button = document.getElementById('notifications')
             var modal_content = document.getElementById('notifications_window')
+
             if (notification_pages_info.overall > 6){
                 button.textContent = `Notifications: 5+`;
             }
@@ -177,7 +199,7 @@
                 var comment_body = document.createElement("div");
                 comment_body.className = "notification-box";
                 comment_body.style.padding = "5px";
-                comment_body.style.width = "100%";
+                comment_body.style.maxWidth = "100%";
                 comment_body.style.textAlign = "justify";
                 comment_body.style.cursor = "pointer";
 
@@ -242,30 +264,42 @@
                     content_text.innerHTML = `You received new reply on your commentary on Story <a href="http://127.0.0.1:8000/story/${data.notifications[i].post_id}" class="notification-link">${data.notifications[i].post_title}</a> from User <a href="http://example.com" class="notification-link">${data.notifications[i].creator_username}</a>`;
                 }
                 content_text.style.textAlign = "left";
-                content_text.style.fontSize = "15px";
+                content_text.style.fontSize = "0.7rem";
                 content_text.style.padding = "5px";
     
                 comment_body.appendChild(content_text);
                 modal_content.appendChild(comment_body);
             }
 
+            var elements = document.getElementsByClassName('notification-box');
+            var target = elements[elements.length - 1];
+            console.log(target)
+
+            var options = {
+                root: null, // Use the viewport as the root
+                rootMargin: '0px', // No margin around the viewport
+                threshold: 0.5 // Trigger when at least half of the element is visible
+            };
+
+            // Callback function to execute when the element intersects
+            var callback = (entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting & notification_pages_info.has_next) {
+                    // Element is visible
+                    observer.unobserve(entry.target);
+                    getUserNotifications(notification_pages_info.current + 1);
+                }
+            });
+            };
+
+            // Create an intersection observer instance
+            var observer = new IntersectionObserver(callback, options);
+
+            // Start observing the target element
+            observer.observe(target);
+
         }
         
-        function getCookie(name) {
-            var cookieValue = null;
-            if (document.cookie && document.cookie != '') {
-                var cookies = document.cookie.split(';');
-                for (var i = 0; i < cookies.length; i++) {
-                    var cookie = jQuery.trim(cookies[i]);
-                    // Does this cookie string begin with the name we want?
-                    if (cookie.substring(0, name.length + 1) == (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
 
     </script>
 

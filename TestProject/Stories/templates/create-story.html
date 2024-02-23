@@ -11,11 +11,8 @@
     {% block content %}
     <style>
         .distinct-checkbox {
-            margin: 0.2em;
-        }
-        .distinct-checkbox input[type="checkbox"] {
             float: left;
-            margin-right: 10px;
+            margin: 0.2em;
         }
     </style>
     <div class="heading" style="text-align: center; font-size: 40px; font-family: Verdana, Geneva, Tahoma, sans-serif;">
@@ -79,13 +76,14 @@
                 create_input.type = "radio";
                 create_input.name = "genre";
                 create_input.className = "checkbox-input";
+                create_input.value = cleaned_data[i].genre
                 create_input.value = cleaned_data[i].id;
 
                 var input_label = document.createElement('label');
                 input_label.textContent = cleaned_data[i].genre;
 
-                checkbox_wrapper.appendChild(input_label);
                 checkbox_wrapper.appendChild(create_input);
+                checkbox_wrapper.appendChild(input_label);
                 genres_box.appendChild(checkbox_wrapper);
             }
 

@@ -14,50 +14,44 @@
             display: none;
         }
 
-        .form-reply::-webkit-scrollbar {
-            display: none;
-        }
-
+        /* COMMENT BOX CONTENT */
         .comment-box {
-            display: flex; width: 20rem; justify-content: center; padding: 10px; margin: 10px; flex-direction: column; border: solid 1px black;
+            display: flex; max-width: 100%; justify-content: center; padding: 10px; margin: 10px 0 0 0px; flex-direction: column; border-radius: 10px; background-color: lightgoldenrodyellow;
         }
         .comment-box a, h3 {
             text-align: left; padding: 2px;
         }
-
-        /* .comment-box h3 {
-            text-align: left; padding: 2px; margin-bottom: 2px; 
-        }    */
-
-        .comment-box p {
-            text-align: justify; font-size: 25px; font-family: 'Georgia, Times New Roman, Times, serif';
+        .comment-box .comment-data {
+            text-align: justify; 
+            font-size: 1rem; 
+            font-family: Verdana, Geneva, Tahoma, sans-serif; margin-top: 0; 
+            overflow-wrap: break-word;
+            white-space: normal;
+            margin: 0;
+        }
+        .reply-box p {
+            margin-block-end: 0.5em;
+            overflow-wrap: break-word;
+            white-space: normal;
         }
 
         .buttons-wrapper {
-            display: flex; flex-direction: row;
+            display: flex; flex-direction: row; margin-block-start: 0.5em;
         }
 
-        .ViewReply {
-            text-align: center; font-size: 20px; margin-right: 10px;
-        }
-
-        .leaveReply {
-            text-align: center; font-size: 20px;
-        }
         .replies-wrapper {
-            display: none; margin-top: 1em;
+            display: none; justify-content: end;
         }
 
         .replies {
-            display: flex; width: 20em; justify-content: top; align-items: normal;  border: solid 1px rgba(0, 0, 0, 0.2); height: 200px; margin-top: 2vh; flex-direction: column; padding: 5px; overflow: scroll; overflow-x: hidden;
-        }
-
-        .form-wrapper {
-            display: none; margin-top: 1em;
-        }
-
-        .form-reply {
-            display: flex; width: 20em; justify-content: top; align-items: normal;  border: solid 1px rgba(0, 0, 0, 0.2); height: 200px; margin-top: 2vh; flex-direction: column; padding: 5px; overflow: scroll; overflow-x: hidden;
+            display: flex; 
+            width: 90%; 
+            align-items: normal; 
+            height: min-content; 
+            flex-direction: column; 
+            padding: 5px; 
+            overflow: scroll; 
+            overflow-x: hidden;
         }
 
         .input-field-form {
@@ -65,6 +59,68 @@
         }
         .submit-form {
             width: 100%; margin-top: 0.5em; padding: 5px; border-radius: 10px;
+        }
+
+        input:active {
+            border: none;
+            border-bottom: solid 1px grey;
+        }
+        .comment-creator-title {
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            font-size: 0.7rem;
+        }
+
+        /* STORY */
+        .story-text-container p {
+            overflow-wrap: break-word; /* Allow words to be broken and wrap onto the next line */
+            white-space: normal; /* Ensure whitespace is preserved */
+        }
+
+
+        /* BUTTONS */
+        .like, .dislike, .reply, .enabled{
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            text-align: center; 
+            margin-right: 10px;
+            margin-top: 0;
+            margin-bottom: 0;
+            border: none;
+            background-color: lightblue;
+            cursor: pointer;
+            transition: 0.8s;
+            font-size: 0.8rem;
+            border-radius: 5px;
+            padding: 5px;
+        }
+        .like:hover, .dislike:hover, .reply:hover, .enabled:hover {
+            background-color: lightsalmon;
+            transition: 0.8s;
+        }
+
+        .submit-button {
+            background-color: lightgoldenrodyellow;
+            border-radius: 10px; 
+            border: solid 1px rgba(0, 0, 0, 0.2); 
+            cursor: pointer;
+            transition: 0.5s;
+        }
+
+        .submit-button:hover {
+            background-color: lightsalmon;
+            transition: 0.5s;
+        }
+        .disabled {
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            text-align: center; 
+            margin-right: 10px;
+            margin-top: 0;
+            margin-bottom: 0;
+            border: none;
+            background-color: inherit;
+            transition: 0.8s;
+            font-size: 0.8rem;
+            border-radius: 5px;
+            padding: 5px;
         }
     </style>
 
@@ -74,36 +130,74 @@
         <h3 style="font-size: 25px;">by <a href="https://example.com">{{ context.story.creator_username }}</a> aka <a href="http://example.com">creator profile</a></h3>
     
         <div class="story-wrapper" style="display: flex; width: 100%; align-items: center; justify-content: center; flex-direction: column; margin-bottom: 5vh;  margin-top: 5vh;">
-            <div class="story-text-container" style="display: block; border: 1px solid rgba(0, 0, 0, 0.2); width: 40vw;  padding: 5px; height: 60vh; border-radius: 10px;">
-                <p style="font-size: 25px; padding: 5px;">{{ context.story.body }}</p>
+            <div class="story-text-container" style="display: block; border: 1px solid rgba(0, 0, 0, 0.2); width: 30vw;  padding: 5px; height: 80vh; border-radius: 10px;">
+                <p style="font-size: 1.3rem; padding: 5px;">{{ context.story.body }}</p>
             </div>
         </div>
     </div>
-    <h1 style="text-align: center; font-size: 40px; font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;">Story Comments</h1>
-    
-    <div class="comment-section-wrapper" style="display: flex; position: relative; flex-direction: column; justify-content: center; width: 100%; margin: auto;">
-        <div class="comment-form-wrapper" style="display: flex; justify-content: center; align-items: center;">
-            <form method="post" action="http://127.0.0.1:8000/comments/all_comments" style="display: flex; flex-direction: row; width: 500px; justify-content: center; align-items: center; height: 6em; margin-top: 2vh; flex-direction: column;">
-                {% csrf_token %}
-                <input placeholder="Here goes your comment body" name='comment_body' style="width: 100%; height: 5em; border: solid 1px grey; padding: 5px; border-radius: 10px;">
-                <input type="hidden" name="post_id" value="{{ context.story.id }}">
-                <input type="hidden" name="next" value="{{ request.path }}">
-                <button type="submit" style="width: 100%; margin-top: 0.5em; padding: 5px; border-radius: 10px; border: solid 1px rgba(0, 0, 0, 0.2);">Create Comment</button>
-            </form>
+    <div class="story-page-bottom-wrapper" style="display: flex; flex-direction: row; width: 80%; margin: auto; justify-content: center;">
+        <div class="comments-wrapper" style="display: flex; justify-content: left; flex-direction: column; width: 50%; margin-right: 1rem;">
+            <h3 style="text-align: center; font-size: 2rem;; font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;">Comments</h3>
+            <div class="comment-form-wrapper" style="display: flex; justify-content: left; align-items: center;">
+                <form method="post" action="http://127.0.0.1:8000/comments/comments" id="observable" style="display: flex; flex-direction: column; width: 500px; justify-content: left; align-items: center; height: 6em; margin-top: 2vh; flex-direction: column;">
+                    {% csrf_token %}
+                    <input placeholder="Here goes your comment body" name='comment_body' style="width: 100%; height: 5em; border: none; border-bottom: solid 1px grey;">
+                    <input type="hidden" name="post_id" value="{{ context.story.id }}">
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button class="submit-button" type="submit" style="width: 100%; margin-top: 0.5em; padding: 5px;">Create Comment</button>
+                </form>
+            </div>
+
+            <div class="comment-section-wrapper" style="display: flex; position: relative; flex-direction: row; justify-content: left; width: 100%; margin: auto;">          
+                <div class="comments-box-wrapper" id="comment_boxes"  style="display: flex; flex-direction: column; flex-wrap: wrap; justify-content: left; width: 100%; margin-top: 2em;">
+
+                </div>
+            </div>
         </div>
-
-        <div class="comments-box-wrapper" id="comment_boxes"  style="display: flex; flex-direction: row; flex-wrap: wrap; padding: 40px; justify-content: center;">
-
+        <div class="recommendations-wrapper" style="display: flex; margin-left: 1rem; padding: 0; width: 50%; flex-direction: column; align-items: center;">
+            <h3 style="font-size: 2rem; font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;">Recommendations</h3>
+            <div class="recommendations" style="display: flex; width: 100%; flex-direction: column; align-items: center;">
+                <div class="recommendation-boxes-wrapper" style="display: block; position: relative; justify-content: center; align-items: top; border: solid 1px rgba(0, 0, 0, 0.2); width: 80%; height: 100vh;">
+                    
+                </div>
+            </div>
         </div>
-
-
     </div>
-        
-        
+    <div class="reply-form-wrapper" style="display: none; justify-content: left; align-items: center;">
+        <form method="post" action="http://127.0.0.1:8000/comments/comments" style="display: flex; flex-direction: column; width: 500px; justify-content: left; align-items: center; height: 6em; margin-top: 2vh; flex-direction: column;">
+            {% csrf_token %}
+            <input placeholder="Here goes your reply body" name='comment_body' style="width: 100%; height: 5em; border: none; border-bottom: solid 1px grey;">
+            <input type="hidden" name="post_id" value="{{ context.story.id }}">
+            <input type="hidden" name="parent_id" value="">
+            <input type="hidden" name="next" value="{{ request.path }}">
+            <button class="submit-button" type="submit" style="width: 100%; margin-top: 0.5em; padding: 5px;">Create Comment</button>
+        </form>
+    </div>
+
         <script>
-            window.addEventListener('DOMContentLoaded', ViewComments());
+            var forms = document.getElementsByClassName('reply-form-wrapper');
+
+            const targetElement = document.getElementById('observable');
+            const options = {
+                root: null, // Use the viewport as the root
+                rootMargin: '0px', // No margin around the viewport
+                threshold: 0.6 // Trigger when at least half of the element is visible
+            };
+            const callback = (entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    observer.unobserve(entry.target);
+                    ViewComments()
+                }
+            });
+            };
+            const observer_form = new IntersectionObserver(callback, options);
+            observer_form.observe(targetElement);
+
+            // window.addEventListener('DOMContentLoaded', ViewComments());
             comment_pages_info = null;
             story_info = null;
+            replies_pages_info = null;
 
             // for (let j = 0; j < viewReplies.length; j++ ){
             //     viewReplies[j].addEventListener('click', function() { 
@@ -112,32 +206,88 @@
         
             //     makeReplies[j].addEventListener('click', function() { ViewReplyForm(j) })
             // }
-        
+                
+            function LikeDislikeComment(comment_id, type, index) {
+                let url = `http://127.0.0.1:8000/comments/likeunlike`
+                let token = document.getElementById('token');
+
+                fetch(url, {
+                    method: "POST",
+                    headers:{
+                        'Content-Type':'application/json',
+                        'X-CSRFToken': token.value,
+                    },
+                    body: JSON.stringify({'comment_id': comment_id, 'type': type}) 
+                }).then(response => {
+                    return response.json()
+
+                }).then(response => {
+                    let cleaned_data = response.data;
+                    let comment = document.getElementsByClassName('buttons-wrapper');
+                    let fields = comment[index].childNodes;
+
+                    for (let i = 0; i < fields.length; i++) {
+                        if (fields[i].className.includes('dislike')){
+                            fields[i].textContent = `Dislikes: ${cleaned_data.dislikes_count}`
+                        }
+                        else if (fields[i].className.includes('like')){
+                            fields[i].textContent = `Likes: ${cleaned_data.likes_count}`
+                        }
+                        if (fields[i].className.includes('enabled') || fields[i].className.includes('disabled')){
+                            fields[i].textContent = `Replies: ${cleaned_data.replies_count}`
+                        }
+                    }
+                })
+            }
+
             function ViewReplyForm(k) {
-                let forms = document.getElementsByClassName('form-wrapper');
+                let forms = document.getElementsByClassName('reply-form-wrapper');
                 let replies = document.getElementsByClassName('replies-wrapper');
 
-                for (let i = 0; i < makeReplies.length; i++) {
-                    forms[i].style.display = "none";
+                for (let i = 0; i < forms.length - 1; i++) {
+                    if (i != k) {
+                        forms[i].style.display = "none";
+                    }
                     replies[i].style.display = "none";
-        
                 }
         
-                forms[k].style.display = "none" ? "flex": "none"; 
+                if (forms[k].style.display == "none"){
+                    forms[k].style.display = "flex";
+                } 
+                else {
+                    forms[k].style.display = "none";
+                } 
             }
         
             function ViewReplies(comment_id, j) {
-                let forms = document.getElementsByClassName('form-wrapper');
+                let forms = document.getElementsByClassName('reply-form-wrapper');
                 let replies = document.getElementsByClassName('replies-wrapper');
+                let to_be_tracked = document.getElementsByClassName('replies');
                 
-                for (let i = 0; i < forms.length; i++) {
+
+                for (let i = 0; i < replies.length; i++) {
+                    if (i != j) {
+                        replies[i].style.display = "none";
+                    }
                     forms[i].style.display = "none";
-                    replies[i].style.display = "none";
                 }
         
-                replies[j].style.display = "flex";
-        
-                fetch(`http://127.0.0.1:8000/comments/replies?parent=${comment_id}&page=1`, {
+                if (replies[j].style.display == "none") {
+                    replies[j].style.display = "flex";
+                    if (to_be_tracked[j].childNodes.length == 0) {
+                        fetchReplies(comment_id, j, 1);
+                    }
+                }
+                else {
+                    replies[j].style.display = "none";
+                }
+                
+
+            }
+
+            function fetchReplies(comment_id, j, page) {
+
+                fetch(`http://127.0.0.1:8000/comments/replies?parent=${comment_id}&page=${page}`, {
                     method:'GET',
                     headers:{
                         'Content-Type':'application/json',
@@ -148,41 +298,68 @@
                         return response.json()
                 })
                 .then(response => {
-                    console.log(response)
-                    createRepliesCards(response, j)
+                    replies_pages_info = response.data.page
+                    CreateRepliesCards(response.data.replies, j, comment_id)
                 });
+                
             }
-        
-            function createRepliesCards(data, j) {
-                cleaned_data = data.data;
+
+            function CreateRepliesCards(data, j, comment_id) {
+                cleaned_data = data;
         
                 for (let i = 0; i < cleaned_data.length; i++){
                     var comment_body = document.createElement("div");
                     comment_body.className = "reply-box";
                     comment_body.style.padding = "5px";
+                    comment_body.style.paddingBottom = "0px";
                     comment_body.style.borderBottom = "solid 1px lightgrey";
                     comment_body.style.width = "100%";
                     comment_body.style.textAlign = "left";
         
-                    var comment_creator = document.createElement("h2");
-                    comment_creator.innerHTML = `<a href="http://example.com" class="notification-link">${cleaned_data[i].creator}</a>`;
+                    var comment_creator = document.createElement("h3");
+                    comment_creator.innerHTML = `by <a href="http://example.com" class="notification-link">${cleaned_data[i].creator}</a> on ${cleaned_data[i].created_at.date} at ${cleaned_data[i].created_at.time}`;
         
                     comment_creator.style.textAlign = "left";
-                    comment_creator.style.fontSize = "15px";
+                    comment_creator.style.fontSize = "0.9rem";
                     comment_creator.style.fontStyle = "italic";
         
-                    var comment_text = document.createElement("h3");
+                    var comment_text = document.createElement("p");
                     var text = document.createTextNode(cleaned_data[i].comment_body);
                     comment_text.appendChild(text);
         
                     comment_text.style.textAlign = "left";
-                    comment_text.style.fontSize = "15px";
+                    comment_text.style.fontSize = "1.1rem";
                     
                     comment_body.appendChild(comment_creator);
                     comment_body.appendChild(comment_text);
                     replies_bound_box[j].appendChild(comment_body);
                 }
                 
+                var elements = document.getElementsByClassName('reply-box');
+                var target = elements[elements.length - 1];
+
+                var options = {
+                    root: null, // Use the viewport as the root
+                    rootMargin: '0px', // No margin around the viewport
+                    threshold: 0.5 // Trigger when at least half of the element is visible
+                };
+
+                // Callback function to execute when the element intersects
+                var callback = (entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting & replies_pages_info.has_next) {
+                        // Element is visible
+                        fetchReplies(comment_id, j, replies_pages_info.current + 1);
+                    }
+                });
+                };
+
+                // Create an intersection observer instance
+                var observer = new IntersectionObserver(callback, options);
+
+                // Start observing the target element
+                observer.observe(target);
+                    
             }
             
             window.addEventListener('scroll', function lazyLoad(){
@@ -226,41 +403,67 @@
                         comment_box.style.border = 'border: solid 3px red';
                     }
 
+                    var user_Link = document.createElement('h3');
+                    user_Link.className = 'comment-creator-title';
+
                     if (data[j].creator_id){
-                        var user_Link = document.createElement('a');
-                        user_Link.href = `https://example.com`;
-                        var user_name = document.createElement('h3');
-                        user_name.textContent = data[j].creator;
-                        user_Link.appendChild(user_name);
+                        user_Link.innerHTML = `by <a href="https://example.com">${data[j].creator}</a> on ${data[j].created_at.date} at ${data[j].created_at.time}`;
                     }
                     else {
-                        var user_Link = document.createElement('h3');
-                        user_Link.textContent = 'Anonymous User'
+                        user_Link.textContent = 'Anonymous User';
                     }
 
                     var comment_body = document.createElement('p');
+                    comment_body.className = 'comment-data';
                     comment_body.textContent = data[j].comment_body;
                     
+
+                    var replies_count = document.createElement('p');
+                    replies_count.textContent = `Replies: ${data[j].replies_count}`;
+                    var like_button = document.createElement('p');
+                    like_button.textContent = `Likes: ${data[j].likes_count}`;
+                    var dislike_button = document.createElement('p');
+                    dislike_button.textContent = `Dislikes: ${data[j].dislikes_count}`;
+
+                    // info_wrapper.appendChild(likes_count);
+                    // info_wrapper.appendChild(dislikes_count);
+                    // info_wrapper.appendChild(replies_count);
+
                     var buttons_wrapper = document.createElement('div');
                     buttons_wrapper.className = 'buttons-wrapper';
 
-                    var view_replies_button = document.createElement('button');
-                    view_replies_button.className = 'ViewReply';
-                    view_replies_button.innerHTML = "View Replies";
-                    view_replies_button.setAttribute("data-commentID", data[j].id)
-                    view_replies_button.addEventListener('click', function() { 
-                        comment = view_replies_button.getAttribute("data-commentID")
-                        ViewReplies(comment, j) 
-                    })
-
-                    var view_reply_form_button = document.createElement('button');
-                    view_reply_form_button.className = 'leaveReply';
-                    view_replies_button.setAttribute("data-commentID", data[j].id)
+                    var view_reply_form_button = document.createElement('p');
+                    view_reply_form_button.className = 'comment-buttons reply';
                     view_reply_form_button.innerHTML = "Reply";
+
                     view_reply_form_button.addEventListener('click', function() { 
-                        comment = view_reply_form_button.getAttribute("data-commentID")
                         ViewReplyForm(j) 
                     })
+
+                    // var like_button = document.createElement('button');
+                    like_button.className = 'comment-buttons like';
+                    
+
+                    // var dislike_button = document.createElement('button');
+                    dislike_button.className = 'comment-buttons dislike';
+                    
+
+                    
+                    buttons_wrapper.appendChild(like_button);
+                    buttons_wrapper.appendChild(dislike_button);
+                    buttons_wrapper.appendChild(replies_count);
+                    buttons_wrapper.appendChild(view_reply_form_button);
+
+                    if (data[j].replies_count > 0) {
+                        replies_count.className = 'comment-buttons enabled';
+                        replies_count.addEventListener('click', function() { 
+                            ViewReplies(data[j].id, j) 
+                        })
+                    }
+                    else {
+                        replies_count.className = 'comment-buttons disabled';
+                    }
+
 
                     var replies_wrapper = document.createElement('div');
                     replies_wrapper.className = 'replies-wrapper';
@@ -268,34 +471,66 @@
                     var replies_container = document.createElement('div');
                     replies_container.className = 'replies';
                     
-
-                    var replies_form_wrapper = document.createElement('div');
-                    replies_form_wrapper.className = 'form-wrapper';
-
-                    var replies_form_container = document.createElement('div');
-                    replies_form_container.className = 'form-reply';
-
-
-                    replies_form_wrapper.appendChild(replies_form_container);
+                    var form_wrapper = forms[forms.length - 1].cloneNode(true);
+                    form_to_modify = form_wrapper.getElementsByTagName('form');
+                    form_to_modify[0].action = 'http://127.0.0.1:8000/comments/replies';
+                    parent_id_field = form_to_modify[0].getElementsByTagName('input');
+                    
+                    for (let i =0; i < parent_id_field.length; i++){
+                        if (parent_id_field[i].name == "parent_id"){
+                            parent_id_field[i].value = data[j].id
+                        }
+                    }
+                    
                     replies_wrapper.appendChild(replies_container);
 
-                    buttons_wrapper.appendChild(view_replies_button);
-                    buttons_wrapper.appendChild(view_reply_form_button);
 
                     comment_box.appendChild(user_Link);
                     comment_box.appendChild(comment_body);
                     comment_box.appendChild(buttons_wrapper);
 
                     comment_box.appendChild(replies_wrapper);
-                    comment_box.appendChild(replies_form_wrapper);
-                    
+                    comment_box.appendChild(form_wrapper);
+
                     placeholder.appendChild(comment_box);
+
+                    like_button.addEventListener('click', function() { 
+                        LikeDislikeComment(data[j].id, 'like', j) 
+                    })
+
+                    dislike_button.addEventListener('click', function() { 
+                        LikeDislikeComment(data[j].id, 'dislike', j) 
+                    })
                 }
 
+                forms = document.getElementsByClassName('reply-form-wrapper');
                 replies_bound_box = document.getElementsByClassName('replies') //builder box
                 viewReplies = document.getElementsByClassName('ViewReply')  //view replies button
                 makeReplies = document.getElementsByClassName('leaveReply')
+
+                // OBSERVER
+
+                let comments = document.getElementsByClassName('comment-box');
+                let target = comments[comments.length - 1];
+                let options = {
+                    root: null, // Use the viewport as the root
+                    rootMargin: '0px', // No margin around the viewport
+                    threshold: 0.6 // Trigger when at least half of the element is visible
+                };
+
+                let callback = (entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting & comment_pages_info.has_next) {
+                        observer.unobserve(entry.target);
+                        ViewComments(page = comment_pages_info.current + 1)
+                    }
+                });
+                };
+
+                let observer_comments = new IntersectionObserver(callback, options);
+                observer_comments.observe(target);
             }
+            
         </script>
     {% endblock %}
 </body>
