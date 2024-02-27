@@ -23,4 +23,5 @@ urlpatterns = [
     path('notifications/', include("Notifications.urls")),
     path('', include('Stories.urls')),
     path('user/', include('Authentication.urls')),
+    path('tests/', include('TestingApplication.urls')),
 ]

@@ -3,7 +3,8 @@ from .models import *
 from django.http import HttpResponseRedirect
 from django.http import JsonResponse
 from django.core.paginator import Paginator
-
+from Authentication.models import BaseUserProfile, SubscriptionTimeStampThrough
+import json
 
 # Create your views here.
 def getAllStories(request):
@@ -11,18 +12,13 @@ def getAllStories(request):
         return render(request, 'stories.html')
 
 def getSingleStory(request, id):
-    post = Post.objects.get(pk=id)
-    context = {
-        "story": post.serializer_single(),
-        "comment_id": int(request.GET.get('comment', -1)),
-    }
-    
-    return render(request, "single-story.html", {"context": context})
+    if request.method == "GET":
+        return render(request, "single-story.html", {"context": id})
     
 def getStoryPage(request):
     req_page = int(request.GET.get('page', 1))
     
-    stories = Post.objects.all().order_by('post_title')
+    stories = Post.objects.all().order_by('date_created')[:100]
     
     paginated_stories = Paginator(stories, per_page=10)
     get_page = paginated_stories.get_page(req_page)
@@ -48,14 +44,154 @@ def createStory(request):
     elif request.method == "POST":
         data = request.POST
         genres = data.get('genre')
+        descr = data.get('description', None)
+        user = BaseUserProfile.objects.get(user = request.user)
         
-        
-        create_story = Post(creator_id = request.user, post_title = data.get('title', "Story Title Lost"), post_text = data.get('body', 'Story Text Lost'), genre=PostGenre.objects.get(pk=int(genres)))
+        if len(descr) > 0:
+            create_story = Post(creator_id = user.writer, post_description=descr, post_title = data.get('title', "Story Title Lost"), post_text = data.get('body', 'Story Text Lost'), genre=PostGenre.objects.get(pk=int(genres)))
+        else:
+            create_story = Post(creator_id = user.writer, post_title = data.get('title', "Story Title Lost"), post_text = data.get('body', 'Story Text Lost'), genre=PostGenre.objects.get(pk=int(genres)))
         create_story.save()
         
-        return HttpResponseRedirect(data.get('next', '/'))
+        return HttpResponseRedirect('/')
     
 def getGenres(request):
     if request.method == "GET":
         genres = PostGenre.objects.all()     
         return JsonResponse({"data": [genre.serializer() for genre in genres]}, safe=False)
+    
+def getWriterStories(request, id):
+    if request.method == "GET":
+        stories = Post.objects.filter(creator_id__id = id)
+        
+        return render(request, 'user-stories.html', {'context':[elem.serializer_all() for elem in stories]})
+    
+def getUserViewHistory(request):
+    if request.method == "GET":
+        user = request.GET.get('reader')
+        
+        get_reader = UserProfileReader.objects.get(pk=user)
+        get_viewed = UserViewedPosts.objects.get(reader=get_reader)
+        
+        return JsonResponse({"context": [elem.serializer_all() for elem in get_viewed.posts.all()]})
+    
+def getDistinctStoryPage(request):
+    if request.method == "GET":
+        id = int(request.GET.get('story'))
+        post = Post.objects.get(pk=id)
+        
+        check_subscription = False
+        check_ownership = False
+        highlight = request.GET.get('comment', None)
+        auth = False
+        
+        if request.user.id:
+            auth = True
+            sessionData = request.session.get('viewed')
+        
+            if sessionData == None:
+                request.session['viewed'] = {}
+                request.session.save()
+                
+            sessionData = request.session.get('viewed')
+            
+            user_profile = BaseUserProfile.objects.get(user = request.user)
+            check_subscription = post.creator_id in user_profile.reader.subscribed_to.all()
+            
+            if user_profile.writer:
+                check_ownership = post.creator_id == user_profile.writer
+
+            if check_ownership == False:
+                get_reader_posts = UserViewedPosts.objects.get(reader=user_profile.reader)
+
+                if post not in get_reader_posts.posts.all():
+                    get_reader_posts.posts.add(post)
+                    get_reader_posts.save()
+                
+                else:
+                    if id not in sessionData.keys():
+                        sessionData.update({id: True})
+                        post.creator_id.total_story_views_counter += 1
+                        get_reader_posts.posts.add(post)
+                        get_reader_posts.save()
+                        request.session.save()
+
+            try:
+                notified = SubscriptionTimeStampThrough.objects.get(writer = post.creator_id, reader = user_profile.reader).receive_notifications
+            except SubscriptionTimeStampThrough.DoesNotExist:
+                notified = None
+        
+        context = {
+            "story": post.serializer_single(),
+            "comment_id": int(request.GET.get('comment', -1)),
+            "subscribed": check_subscription ,
+            "owner": check_ownership,
+            "auth": auth,
+            "get_notif": notified, 
+        }
+
+        return JsonResponse({"data": context})
+        
+def reactToStory(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        
+        if request.user:
+            sessionData = request.session.get('story_like_variable')
+            react_type = data.get('type')
+            story_id = int(data.get('story'))
+            string_story_id = str(story_id)
+            
+            story = Post.objects.get(pk=story_id)
+            reader_liked_stories = UserLikedPosts.objects.get(reader__id=int(data.get('reader')))
+                
+            if sessionData == None:
+                request.session['story_like_variable'] = {
+                        'dislikes': {},
+                    }
+                request.session.save()
+                sessionData = request.session.get('story_like_variable')
+            
+            if react_type == 'like_story':  
+                if story in reader_liked_stories.posts.all():
+                    reader_liked_stories.posts.remove(story)
+                    story.likes_count -= 1    
+             
+                else:
+                    reader_liked_stories.posts.add(story)
+                    story.likes_count += 1      
+                    
+                    if string_story_id in sessionData['dislikes'].keys():
+                        story.dislikes_count -= 1
+
+                        sessionData['dislikes'].pop(string_story_id, None)
+           
+            else:
+                if string_story_id in sessionData['dislikes'].keys():
+                    story.dislikes_count -= 1
+                    sessionData['dislikes'].pop(string_story_id, None)
+                else:
+                    story.dislikes_count += 1
+                    sessionData['dislikes'].update({story_id: True})
+                    
+                    if story in reader_liked_stories.posts.all():
+                        reader_liked_stories.posts.remove(story)
+                        story.likes_count -= 1
+
+                        
+                        
+            request.session.save()
+            story.save()
+            reader_liked_stories.save()
+            print(sessionData)
+            
+        return JsonResponse({"success": True, 'reactions': {'likes': story.likes_count, 'dislikes':story.dislikes_count}})
+                        
+def getUserLikedStories(request):
+    if request.method == "GET":
+        user = request.GET.get('reader')
+        
+        get_reader = UserProfileReader.objects.get(pk=user)
+        get_viewed = UserLikedPosts.objects.get(reader=get_reader)
+        
+        return JsonResponse({"context": [elem.serializer_all() for elem in get_viewed.posts.all()]})

@@ -7,125 +7,289 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
+
 <body>
     {% block content %}
     <style>
         .story-box {
             display: flex; 
-            width: 20rem; 
-            height: 10rem;
-            justify-content: center; 
-            padding: 10px; 
+            width: 15rem; 
+            height: 20rem;
             margin: 10px; 
             flex-direction: column; 
-            border: solid 1px black;
+            border: solid 1px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
             cursor: pointer;
+        }
+        .story-text-wrapper {
+            padding: 10px;
+            overflow: hidden;
+            word-wrap: break-word;
         }
     
         .story-user {
+            color:rgba(0, 0, 0); 
+            font-size: 0.6rem;
+            margin-top: 0.1rem; margin-bottom: 0.1rem; 
+            font-weight: 300;
+        }
+        .story-timestamp {
             color:darkgrey; 
-            font-size: 20px; 
-            font-family: Georgia, 'Times New Roman', Times, serif;
+            font-size: 0.6rem;
+            margin-top: 0.1rem; margin-bottom: 0.1rem; margin-left: 0.3rem;
+            font-weight: 300;
         }
     
         .story-title {
-            text-align: justify; 
-            font-size: 25px; 
-            font-family:Georgia, 'Times New Roman', Times, serif;
+            text-align: left; 
+            font-size: 1rem; 
+            margin-top: 0.1rem;
+            margin-bottom: 0.1rem;
         }
+        .searchbox-wrapper {
+            display: flex;
+            height: 20vh;
     
+        }
+        .story-text-container {
+            max-height: 100%;
+            padding: 10px;
+            padding-top: 0px;
+            text-overflow: ellipsis;
+        }
+        .story-info-container { 
+            display: flex;
+            flex-direction: row;
+        }
+
+        .story-image {
+            border-radius: 5px 5px 0px 0px;
+        }
+
+        .story-description {
+            height: 100%;
+            font-size: 0.7rem;
+            margin-bottom: 0.5em;
+            margin-top: 0.5em;
+            word-wrap: break-word;
+        }
+
     </style>
-
-    <div class="content">
-        <h1 style="text-align: center; font-size: 40px; font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;">Stories</h1>
-        <div class="stories-box-wrapper" id="stories_box" style="display: flex; flex-direction: row; flex-wrap: wrap; padding: 40px; justify-content: center">
-            
-        </div>
-
-        <div class="buttons-wrapper" style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
-            <button onclick="getPrevPage()"  class="page-button" id="next"  style="width: 5em; height: 2em; margin-right: 0.5em;">Previous</button> 
-            <p id="current" style="margin-left: 0.5em; margin-right: 0.5em;"></p>
-            <p> ... </p>
-            <p id="overall" style="margin-left: 0.5em; margin-right: 0.5em;"></p>
-            <button onclick="getNextPage()" class="page-button" id="prev" style="width: 5em; height: 2em; margin-left: 0.5em;">Next</button> 
-        </div>
-    </div>
     
+        <div class="headpart">
+            <h1 style="text-align: center; font-size: 40px; font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;">Stories</h1>
+        </div>
+        <div class="content-wrapper" style="display: flex; justify-content: center; align-items: center;">
+            <div class="content" style="display: flex; width: 100%; justify-content: inherit;">
+                
+                <div class="filters-wrapper" style="display: flex; flex-direction: column; flex-wrap: nowrap; width: 15%; border: 1px solid rgba(0, 0, 0, 0.2); padding: 10px; margin-right: 1.5rem; height: min-content; margin-left: 3rem; border-radius: 10px;">
+                    <div class="filters" style="width: 100%; height: 100%;">
+                        <div class="heading-filters-wrapper" style="width: 100%; height: min-content;  border-bottom: 1px solid rgba(0, 0, 0, 0.2); margin-top: 1em; margin-bottom: 1em;">
+                            <h3 style="font-family: Verdana, Geneva, Tahoma, sans-serif; margin-left: 0.4em; margin-top: 0.1em; margin-bottom: 0.1em; padding: 5px; font-size: 0.9rem;">Sort By</h3>
+                        </div>
+                        <div class="sort-by-wrapper">
+                            <div class="distinct-checkbox">
+                                <input type="radio" name="sorting" value="likes_desc">
+                                <label>Likes Descending</label>
+                            </div>
+                            <div class="distinct-checkbox">
+                                <input type="radio" name="sorting" value="likes_desc">
+                                <label>Likes Ascending</label>
+                            </div>
+                            <div class="distinct-checkbox">
+                                <input type="radio" name="sorting" value="likes_desc">
+                                <label>Dislikes Descending</label>
+                            </div>
+                            <div class="distinct-checkbox">
+                                <input type="radio" name="sorting" value="likes_desc">
+                                <label>Dislikes Descending</label>
+                            </div>
 
-    <script>
-        window.addEventListener('DOMContentLoaded', getPage());
+                        </div>
 
-        function getNextPage() {
-            var pages_data = JSON.parse(sessionStorage.getItem('pages_data'));
-            if (pages_data.has_next == true) {
-                getPage(pages_data.current + 1)
+                        <div class="heading-genres-wrapper" style="width: 100%; height: min-content;  border-bottom: 1px solid rgba(0, 0, 0, 0.2); margin-top: 1em; margin-bottom: 1em;">
+                            <h3 style="font-family: Verdana, Geneva, Tahoma, sans-serif; margin-left: 0.4em; margin-top: 0.1em; margin-bottom: 0.1em; padding: 5px; font-size: 0.9rem;">Genres</h3>
+                        </div>
+                        <div class="genres-wrapper" id="genres_wrapper">
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="stories-wrapper" style="display: flex; width: 80%; flex-direction: column; justify-content: center; margin-left: 1.5rem; ">
+                    <div class="searchbox-wrapper" style="padding: 10px;">
+                        <input placeholder="Search" class="search-field">
+                    </div>
+
+                    <div class="stories-boxes-wrapper" id="stories_boxes" style="display: flex; width: 100%; flex-direction: row; flex-wrap: wrap; margin: auto; justify-content: flex-start; ">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            window.addEventListener('DOMContentLoaded', getPage());
+            window.addEventListener('DOMContentLoaded', getGenres());
+            var stories_page_info = null;
+    
+            function getPage(page = 1) {
+                var url = `http://127.0.0.1:8000/getStoryPage?page=${page}`;
+    
+                fetch(url, {
+                        method: "GET",
+                        headers:{
+                                'Content-Type':'application/json',
+                        },
+                    })
+                    .then(response => {
+                        return response.json()
+                    })
+                    .then(response => {
+                        stories_page_info = response.data.page;
+                        buildBoxes(response.data.stories);
+                    });
             }
-        }
+    
+            function buildBoxes(data) {
+                var stories_box = document.getElementById('stories_boxes');
+                try{
+                    var user = JSON.parse(sessionStorage.getItem('user'));
+                }
+                catch (error) {
+                    var user = null;
+                }
+
+                for (var i = 0; i < data.length; i++) {
+                    var link = document.createElement('a');
+                    if (user){
+                        if (user.bound_writer_profile) {
+                            link.href = `http://127.0.0.1:8000/story/${data[i].id}?reader=${user.bound_reader_profile.reader_id}&creator=${user.bound_writer_profile.id}`;
+                        }
+                        else {
+                            link.href = `http://127.0.0.1:8000/story/${data[i].id}?reader=${user.bound_reader_profile.reader_id}`;
+                        }
+                    }
+                    else {
+                        link.href = `http://127.0.0.1:8000/story/${data[i].id}`;
+                    }
+                    link.style.textDecoration = "none";
+    
+                    var comment_box = document.createElement('div');
+                    comment_box.className = "story-box";
+                    
+                    var story_image = document.createElement('img');
+                    story_image.src = data[i].image;
+                    story_image.className = 'story-image';
+
+                    var text_container = document.createElement('div');
+                    text_container.className = 'story-text-container';
+
+                    var info_box_wrapper = document.createElement('div');
+                    info_box_wrapper.className = 'story-info-container';
+
+                    var creator = document.createElement('p');
+                    creator.textContent = `by ${data[i].creator.writer_pseudo}`;
+                    creator.className = "story-user";
+                    
+                    var timestamp = document.createElement('p');
+                    timestamp.textContent = data[i].created_at;
+                    timestamp.className = "story-timestamp";
+
+                    var title = document.createElement('p');
+                    title.textContent = data[i].title;
+                    title.className = "story-title"
+
+                    var description = document.createElement('p');
+                    description.textContent = data[i].description;
+                    description.className = 'story-description';
+                    
+                    info_box_wrapper.appendChild(creator);
+                    info_box_wrapper.appendChild(timestamp);
+                    
+                    var overall_container = document.createElement('div');
+                    overall_container.className = 'story-text-wrapper';
+
+                    overall_container.appendChild(info_box_wrapper);
+                    overall_container.appendChild(title);
+                    overall_container.appendChild(description);
+
+                    comment_box.appendChild(story_image);
+                    comment_box.appendChild(overall_container);
+
+                    link.appendChild(comment_box);
+
+                    stories_box.appendChild(link);
+                }
+                
+                if (i > 0) {
+                    var targetStory = document.getElementsByClassName('story-box');
+                    var options = {
+                        root: null, // Use the viewport as the root
+                        rootMargin: '0px', // No margin around the viewport
+                        threshold: 0.5 // Trigger when at least half of the element is visible
+                    };
         
-        function getPrevPage() {
-            var pages_data = JSON.parse(sessionStorage.getItem('pages_data'));
-            if (pages_data.has_previous == true) {
-                getPage(pages_data.current - 1)
+                    var callback = (entries, observer) => {
+                    entries.forEach(entry => {
+                            if (entry.isIntersecting & stories_page_info.has_next) {
+                                observer.unobserve(entry.target);
+                                getPage(stories_page_info.current + 1);
+                            }
+                        });
+                    };
+        
+                    var observer_story = new IntersectionObserver(callback, options);
+                    observer_story.observe(targetStory[targetStory.length-1]);
+                }
+                
             }
-        }
+            
+            function getGenres() {
+                var url = `http://127.0.0.1:8000/get_genres`
 
-
-        function getPage(page = 1) {
-            var url = `http://127.0.0.1:8000/getStoryPage?page=${page}`;
-            var current_page_num = document.getElementById('current');
-            var total_page_num = document.getElementById('overall');
-
-            fetch(url, {
+                fetch(url, {
                     method: "GET",
-                    headers:{
-                            'Content-Type':'application/json',
+                    headers: {
+                        'Content-Type':'application/json',
                     },
-                })
-                .then(response => {
-                    return response.json()
-                })
-                .then(response => {
-                    sessionStorage.setItem('pages_data', JSON.stringify(response.data.page));
-                    current_page_num.textContent = `Current: ${response.data.page.current}`;
-                    total_page_num.textContent = `Total: ${response.data.page.overall}`;
-                    buildBoxes(response.data.stories);
-                });
-        }
-
-
-        function buildBoxes(data) {
-            var stories_box = document.getElementById('stories_box');
-            stories_box.replaceChildren();
-
-            for (let i = 0; i < data.length; i++) {
-                var link = document.createElement('a');
-                link.href = `http://127.0.0.1:8000/story/${data[i].id}`;
-                link.style.textDecoration = "none";
-
-                var comment_box = document.createElement('div');
-                comment_box.className = "story-box";
-
-                var creator = document.createElement('h1')
-                creator.textContent = data[i].creator_username;
-                creator.className = "story-user";
-
-                var title = document.createElement('p');
-                title.textContent = data[i].title;
-                title.className = "story-title"
-
-                comment_box.appendChild(creator);
-                comment_box.appendChild(title);
-                link.appendChild(comment_box);
-                stories_box.appendChild(link);
+                    })
+                    .then(response => {
+                            return response.json()
+                    })
+                    .then(response => {
+                        CreateGenresBoxes(response);
+                    });
             }
 
-            
-            
-        }
+            function CreateGenresBoxes(data) {
+                var cleaned_data = data.data;
+                var genres_box = document.getElementById('genres_wrapper');
 
-    </script>
+                for(let i = 0; i < cleaned_data.length; i++) {
 
-    
+                    var checkbox_wrapper = document.createElement('div');
+                    checkbox_wrapper.className = "distinct-checkbox";
+
+                    var create_input = document.createElement('input');
+                    create_input.type = "checkbox";
+                    create_input.name = "genre";
+                    create_input.className = "checkbox-input";
+                    create_input.value = cleaned_data[i].genre;
+                    create_input.value = cleaned_data[i].id;
+
+                    var input_label = document.createElement('label');
+                    input_label.textContent = cleaned_data[i].genre;
+
+                    checkbox_wrapper.appendChild(create_input);
+                    checkbox_wrapper.appendChild(input_label);
+                    genres_box.appendChild(checkbox_wrapper);
+                }
+
+            }
+        </script>
+
     {% endblock %}
 </body>
 </html>

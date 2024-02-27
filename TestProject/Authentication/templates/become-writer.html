@@ -1,0 +1,38 @@
+{% extends 'header.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    {% block content %}
+    <div class="content" style="display: flex; justify-content: center; flex-direction: column; align-items: center;">
+        <h1>Create Your Author Profile!</h1>
+        <div class="form-wrapper" style="display: flex; width: 500px; height: 200px; justify-content: center;">
+            <form method="post" action="http://127.0.0.1:8000/user/become_writer" style="display: flex; flex-direction: column; justify-content: space-between;">
+                {% csrf_token %}
+                <input placeholder="Author Pseudo" style="width: 100%; height: 50px" id="pseudo" name='pseudo' required>
+
+                <div class="distinct-box">
+                    <input type="checkbox" name="pseudo_type" value="1" id="checkboxs">
+                    <label>Use Default</label>
+                </div>
+                
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+    </div>
+    <script>
+        var box = document.getElementById('checkboxs')
+        var pseudo_input = document.getElementById('pseudo')
+
+        box.addEventListener('change', function () {
+            pseudo_input.disabled = this.checked;
+        })
+    </script>
+
+    {% endblock %}
+</body>
+</html>

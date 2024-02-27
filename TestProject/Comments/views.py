@@ -1,5 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import redirect
 from django.http import HttpResponseRedirect
+from Notifications.models import UserCommentRepliedNotification
 from .models import *
 from Stories.models import Post
 from django.http import JsonResponse
@@ -14,7 +15,7 @@ def getCommentReplies(request):
         comment_id = request.GET.get('parent')
         req_page = request.GET.get('page', 1)
         
-        get_all_replies = Comment.objects.filter(parent_comment__id = comment_id).order_by('-date_created')
+        get_all_replies = Comment.objects.filter(parent_comment__id = comment_id).order_by('date_created')
         
         paginated = Paginator(get_all_replies, per_page=10)
 
@@ -34,36 +35,48 @@ def getCommentReplies(request):
     
     elif request.method == "POST":
         data = request.POST
-
-        story = Post.objects.get(pk=data.get('post_id'))
-        get_comment = Comment.objects.get(pk=data.get('parent_id'))
         
-    
-        if request.user.id:
-            reply_to_comment = Comment(creator = request.user, post = story, parent_comment = get_comment, comment_body = data.get('comment_body', 'Reply Text Got Lost'))
-            reply_to_comment.save()
+        if request.user:
+            story = Post.objects.get(pk=data.get('post_id'))
+            get_comment = Comment.objects.get(pk=int(data.get('parent_id')))
+            real_parent = Comment.objects.get(pk=int(data.get('real_parent_id')))
             
-            if get_comment.creator:
-                notification = UserCommentRepliedNotification(receiver = get_comment.creator.id, source=get_comment, parent_source = story, creator = request.user)
-                notification.save()
+            user_to_notify = data.get('user_to_notify', None)
+            
+            if real_parent.parent_comment:
+                comment_string = f"<a href='http://127.0.0.1:8000/view_profile?user={real_parent.creator.id}' class='user-link'>@{real_parent.creator.displayable_name}</a>, " + data.get('comment_body')
+            else:
+                comment_string = data.get('comment_body')
+            
+            if user_to_notify:
+                base_user = BaseUserProfile.objects.get(user=request.user)
+                receiver = BaseUserProfile.objects.get(id=int(user_to_notify))
+                
+                reply_to_comment = Comment(creator = base_user, post = story, parent_comment = get_comment, comment_body = comment_string)
+                reply_to_comment.save()
+                
+                if base_user != receiver:
+                    create_notification = UserCommentRepliedNotification(receiver = receiver, source = reply_to_comment, parent_source = story)
+                    create_notification.save()
+            else:
+                base_user = BaseUserProfile.objects.get(user=request.user)
+                reply_to_comment = Comment(creator = base_user, post = story, parent_comment = get_comment, comment_body = comment_string)
+                reply_to_comment.save()
+                
+                if base_user != get_comment.creator:
+                    create_notification = UserCommentRepliedNotification(receiver = get_comment.creator, source = reply_to_comment, parent_source = story)
+                    create_notification.save()
+                
+            return HttpResponseRedirect(data.get('next', '/'))
         else:
-            reply_to_comment = Comment(parent_comment = get_comment, comment_body = data.get('comment_body', 'Reply Text Got Lost'))
-            reply_to_comment.save()
-            
-            if get_comment.creator:
-                notification = UserCommentRepliedNotification(receiver = get_comment.creator.id, source=get_comment, parent_source = story)
-                notification.save()
-        
-        get_comment.replies_count += 1
-        get_comment.save()
-        return HttpResponseRedirect(data.get('next', '/'))
+            return HttpResponseRedirect('login')
         
 def getStoryComments(request):
     if request.method == "GET":
         story_id = request.GET.get('story_id')
         req_page = request.GET.get('page', 1)
         
-        get_comments = Comment.objects.filter(post=Post.objects.get(pk=story_id), parent_comment = None).order_by('-date_created')
+        get_comments = Comment.objects.filter(post=Post.objects.get(pk=int(story_id)), parent_comment = None).order_by('-date_created')
         paginated_comments = Paginator(get_comments, per_page=10)
         get_page = paginated_comments.get_page(req_page)
         
@@ -83,23 +96,20 @@ def getStoryComments(request):
     
     if request.method == "POST":
         data = request.POST
-        story = Post.objects.get(pk=data.get('post_id'))
-        
-        
-        if request.user.id:
-        
-            create_comment = Comment(creator = request.user, post = story, comment_body = data.get('comment_body', 'Comment Body Lost'))
-            create_comment.save()
-            notification = UserStoryCommentedNotification(receiver= story.creator_id.id, source = story, creator = request.user, comment=create_comment)
-            notification.save()
+
+        if request.user:
+            story = Post.objects.get(pk=int(data.get('post_id')))
             
+            user = BaseUserProfile.objects.get(user = request.user)
+            create_comment = Comment(creator = user, post = story, comment_body = data.get('comment_body', 'Comment Body Lost'))
+            create_comment.save()
+        
+            story.comments_count += 1
+            story.save()
+            
+            return HttpResponseRedirect(data.get('next', '/'))
         else:
-            
-            create_comment = Comment(post = story, comment_body = data.get('comment_body', 'Comment Body Lost'))
-            create_comment.save()
-       
-        
-        return HttpResponseRedirect(data.get('next', '/'))
+            return redirect('login')
 
 def LikeUnlikeComment(request):
     if request.method == "POST":

@@ -9,5 +9,10 @@ urlpatterns = [
     path('getStoryPage', getStoryPage, name="getstorypage"),
     path('createStory', createStory, name='createstory'),
     path('get_genres', getGenres, name='genres'),
+    path('get_distinct_story', getDistinctStoryPage, name='story_page'),
+    path('get_writer_stories/<int:id>', getWriterStories, name="write_stories"),
+    path('get_viewed', getUserViewHistory, name='getviews'),
+    path('get_liked', getUserLikedStories, name='getlikes'),
+    path('react_story', reactToStory, name='reaction'),
     
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
