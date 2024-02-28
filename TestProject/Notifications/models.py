@@ -133,6 +133,7 @@ class UserStoryCreatedNotification(models.Model):
      
 class MarkedAsRead(models.Model):
     user = models.ForeignKey(BaseUserProfile, on_delete=models.CASCADE)
+    
     notifications_sc = models.ManyToManyField(UserStoryCreatedNotification)
     notifications_scom = models.ManyToManyField(UserStoryCommentedNotification)
     notifications_cr = models.ManyToManyField(UserCommentRepliedNotification)

@@ -21,6 +21,12 @@
             border-radius: 10px;
             cursor: pointer;
         }
+        .story-box:hover {
+            box-shadow: 0px 0px 5px 0px rgba(0, 0, 0);
+        }
+
+
+
         .story-text-wrapper {
             padding: 10px;
             overflow: hidden;
@@ -45,6 +51,7 @@
             font-size: 1rem; 
             margin-top: 0.1rem;
             margin-bottom: 0.1rem;
+            font-weight: 500;
         }
         .searchbox-wrapper {
             display: flex;
@@ -74,6 +81,107 @@
             word-wrap: break-word;
         }
 
+        .story-genre {
+            text-align: center; 
+            font-size: 0.8rem; 
+            margin-top: 0.1rem;
+            margin-bottom: 0.1rem;
+            margin-left: 0.2rem;
+            margin-right: 0.2rem;
+            padding: 2px;
+            padding-left: 4px;
+            padding-right: 4px;
+            width: min-content;
+            text-decoration: none;
+            background-color: lightsalmon;
+            border-radius: 4px;
+            transition: 0.3s;
+            text-wrap: nowrap;
+        }
+        .story-genre:hover {
+            background-color: lightblue;
+            transition: 0.3s;
+        }
+
+        .story-title-wrapper {
+            display: flex;
+            flex-direction: row;
+            justify-content: left;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .searchbox-wrapper {
+            display: flex;
+            height: 4rem;
+            align-items: center;
+            justify-content: left;
+        }
+
+        .search-button {
+            height: 2.35rem;
+            margin-left: 1rem;
+            padding: 5px;
+        }
+        .search-field {
+            height: 2rem;
+            width: 20rem;
+        }
+        .search-field:focus {
+            outline: none;
+        }
+        .tags-wrapper {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+        } 
+        .tag-wrapper {
+            font-size: 0.7rem;
+            display: flex;
+            margin: 0;
+            margin-right: 0.4rem;
+            background-color: lightblue;
+            padding: 5px;
+            border-radius: 5px;
+            transition: 0.3s;
+            margin-top: 0.3rem;
+        }
+
+        .tag-wrapper:hover {
+            background-color: lightsalmon;
+            cursor: pointer;
+        }
+
+        .container-tags-wrapper {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: left;
+        }
+
+        .tag-holder, .tag-popularity {
+            margin: 0;
+        }
+
+        .tag-popularity {
+            margin-left: 0.3rem;
+        }
+
+        .genre-popularity {
+            margin: 0;
+            font-size: 0.7rem;
+            margin-left: 0.5rem;
+            color: rgba(0, 0, 0, 0.5);
+        }
+        .distinct-checkbox {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: center;
+            line-height: 1.5em;
+        }
+
     </style>
     
         <div class="headpart">
@@ -84,25 +192,33 @@
                 
                 <div class="filters-wrapper" style="display: flex; flex-direction: column; flex-wrap: nowrap; width: 15%; border: 1px solid rgba(0, 0, 0, 0.2); padding: 10px; margin-right: 1.5rem; height: min-content; margin-left: 3rem; border-radius: 10px;">
                     <div class="filters" style="width: 100%; height: 100%;">
-                        <div class="heading-filters-wrapper" style="width: 100%; height: min-content;  border-bottom: 1px solid rgba(0, 0, 0, 0.2); margin-top: 1em; margin-bottom: 1em;">
+                        <div class="heading-filters-wrapper" style="width: 100%; height: min-content;  border-bottom: 1px solid rgba(0, 0, 0, 0.2); margin-bottom: 1em;">
                             <h3 style="font-family: Verdana, Geneva, Tahoma, sans-serif; margin-left: 0.4em; margin-top: 0.1em; margin-bottom: 0.1em; padding: 5px; font-size: 0.9rem;">Sort By</h3>
                         </div>
-                        <div class="sort-by-wrapper">
+                        <div class="sort-by-wrapper" id="sort_by_wrapper">
                             <div class="distinct-checkbox">
-                                <input type="radio" name="sorting" value="likes_desc">
-                                <label>Likes Descending</label>
+                                <input type="radio" name="sorting" value="-likes_count" class="distinct-choice">
+                                <label>Popularity Ascending</label>
                             </div>
                             <div class="distinct-checkbox">
-                                <input type="radio" name="sorting" value="likes_desc">
-                                <label>Likes Ascending</label>
+                                <input type="radio" name="sorting" value="likes_count" class="distinct-choice" checked>
+                                <label>Popularity Descending</label>
                             </div>
                             <div class="distinct-checkbox">
-                                <input type="radio" name="sorting" value="likes_desc">
+                                <input type="radio" name="sorting" value="-dislikes_count" class="distinct-choice">
+                                <label>Dislikes Ascending</label>
+                            </div>
+                            <div class="distinct-checkbox">
+                                <input type="radio" name="sorting" value="dislikes_count" class="distinct-choice">
                                 <label>Dislikes Descending</label>
                             </div>
                             <div class="distinct-checkbox">
-                                <input type="radio" name="sorting" value="likes_desc">
-                                <label>Dislikes Descending</label>
+                                <input type="radio" name="sorting" value="date_created" class="distinct-choice">
+                                <label>Older First<label>
+                            </div>
+                            <div class="distinct-checkbox">
+                                <input type="radio" name="sorting" value="-date_created" class="distinct-choice">
+                                <label>Newer First</label>
                             </div>
 
                         </div>
@@ -113,13 +229,21 @@
                         <div class="genres-wrapper" id="genres_wrapper">
 
                         </div>
+
+                        <div class="heading-tags-wrapper" style="width: 100%; height: min-content;  border-bottom: 1px solid rgba(0, 0, 0, 0.2); margin-top: 1em; margin-bottom: 1em;">
+                            <h3 style="font-family: Verdana, Geneva, Tahoma, sans-serif; margin-left: 0.4em; margin-top: 0.1em; margin-bottom: 0.1em; padding: 5px; font-size: 0.9rem;">Popular Tags</h3>
+                        </div>
+                        <div class="tags-wrapper" id="tags_wrapper">
+
+                        </div>
                     </div>
 
                 </div>
 
                 <div class="stories-wrapper" style="display: flex; width: 80%; flex-direction: column; justify-content: center; margin-left: 1.5rem; ">
                     <div class="searchbox-wrapper" style="padding: 10px;">
-                        <input placeholder="Search" class="search-field">
+                        <input placeholder="Search by #tag, genre or story name" class="search-field" id="search_name_author_tag" value="">
+                        <button class="search-button">Search</button>
                     </div>
 
                     <div class="stories-boxes-wrapper" id="stories_boxes" style="display: flex; width: 100%; flex-direction: row; flex-wrap: wrap; margin: auto; justify-content: flex-start; ">
@@ -132,11 +256,37 @@
         <script>
             window.addEventListener('DOMContentLoaded', getPage());
             window.addEventListener('DOMContentLoaded', getGenres());
+            window.addEventListener('DOMContentLoaded', getTags());
             var stories_page_info = null;
-    
-            function getPage(page = 1) {
-                var url = `http://127.0.0.1:8000/getStoryPage?page=${page}`;
-    
+            var searchfieldIneed = document.getElementById('search_name_author_tag');
+            var sorting_boxes = document.getElementsByClassName('distinct-choice');
+            var genre_boxes = document.getElementsByClassName('genre-checkbox-input');
+            var delayTimer;
+            
+            function getPage(page = 1, search_type = 'search', tag = null, genre = null) {
+                var searchfieldIneed = document.getElementById('search_name_author_tag');
+                var sort_boxes = document.getElementsByClassName('distinct-choice');
+                var sorting_order = Array.from(sort_boxes).find(item => item.checked)?.value || "";
+                
+                if (genre == null) {
+                    var genre_boxes = document.getElementsByClassName('genre-checkbox-input');
+                    var genres = Array.from(genre_boxes).filter(item => item.checked).map(checkedItem => checkedItem.value);
+                    final_genres = genres.join(',');
+                }
+                else {
+                    var genre_boxes = document.getElementsByClassName('genre-checkbox-input');
+                    var genres = Array.from(genre_boxes).forEach(item => item.checked = parseInt(item.value) === genre);
+                    final_genres = genre;
+                }
+
+                var search_prompt = searchfieldIneed.value || "";
+
+                if (tag == null) {
+                    var url = `http://127.0.0.1:8000/getStoryPage?search_type=${search_type}&search_prompt=${search_prompt}&sort_by=${sorting_order}&page=${page}&genres=${final_genres}`;
+                }
+                else {
+                    var url = `http://127.0.0.1:8000/getStoryPage?search_type=${search_type}&search_prompt=${search_prompt}&sort_by=${sorting_order}&page=${page}&genres=${final_genres}&tag=${tag}`;
+                }
                 fetch(url, {
                         method: "GET",
                         headers:{
@@ -148,12 +298,18 @@
                     })
                     .then(response => {
                         stories_page_info = response.data.page;
-                        buildBoxes(response.data.stories);
+                        console.log(response.data.stories);
+                        buildBoxes(response.data.stories, page);
                     });
             }
     
-            function buildBoxes(data) {
+            function buildBoxes(data, page) {
                 var stories_box = document.getElementById('stories_boxes');
+
+                if (page == 1){
+                    stories_box.replaceChildren();
+                }
+
                 try{
                     var user = JSON.parse(sessionStorage.getItem('user'));
                 }
@@ -161,21 +317,7 @@
                     var user = null;
                 }
 
-                for (var i = 0; i < data.length; i++) {
-                    var link = document.createElement('a');
-                    if (user){
-                        if (user.bound_writer_profile) {
-                            link.href = `http://127.0.0.1:8000/story/${data[i].id}?reader=${user.bound_reader_profile.reader_id}&creator=${user.bound_writer_profile.id}`;
-                        }
-                        else {
-                            link.href = `http://127.0.0.1:8000/story/${data[i].id}?reader=${user.bound_reader_profile.reader_id}`;
-                        }
-                    }
-                    else {
-                        link.href = `http://127.0.0.1:8000/story/${data[i].id}`;
-                    }
-                    link.style.textDecoration = "none";
-    
+                for (let i = 0; i < data.length; i++) {                   
                     var comment_box = document.createElement('div');
                     comment_box.className = "story-box";
                     
@@ -197,9 +339,19 @@
                     timestamp.textContent = data[i].created_at;
                     timestamp.className = "story-timestamp";
 
-                    var title = document.createElement('p');
+                    var story_title = document.createElement('div');
+                    story_title.className = 'story-title-wrapper';
+
+                    var title = document.createElement('h3');
                     title.textContent = data[i].title;
                     title.className = "story-title"
+
+                    var genre = document.createElement('p');
+                    genre.innerHTML = data[i].genre.genre;
+                    genre.className = 'story-genre';
+
+                    story_title.appendChild(title);
+                    story_title.appendChild(genre);
 
                     var description = document.createElement('p');
                     description.textContent = data[i].description;
@@ -212,18 +364,38 @@
                     overall_container.className = 'story-text-wrapper';
 
                     overall_container.appendChild(info_box_wrapper);
-                    overall_container.appendChild(title);
+                    overall_container.appendChild(story_title);
                     overall_container.appendChild(description);
 
                     comment_box.appendChild(story_image);
                     comment_box.appendChild(overall_container);
 
-                    link.appendChild(comment_box);
+                    // MAKE GENRE CLICKABLE
+                    comment_box.addEventListener('click', function(event, info=data[i]) {
+                        if (user){
+                            if (user.bound_writer_profile) {
+                                window.location.href = `http://127.0.0.1:8000/story/${info.id}?reader=${user.bound_reader_profile.reader_id}&creator=${user.bound_writer_profile.id}`;
+                            }
+                            else {
+                                window.location.href = `http://127.0.0.1:8000/story/${info.id}?reader=${user.bound_reader_profile.reader_id}`;
+                            }
+                        }
+                        else {
+                            window.location.href = `http://127.0.0.1:8000/story/${info.id}`;
+                        }
+                    })
 
-                    stories_box.appendChild(link);
+                    genre.addEventListener('click', function(event, info=data, index=i) {
+                        event.stopPropagation();
+                        getPage(1, 'search', null, info[index].genre.id)
+
+                    })
+
+                stories_box.appendChild(comment_box);
+
                 }
                 
-                if (i > 0) {
+                try {
                     var targetStory = document.getElementsByClassName('story-box');
                     var options = {
                         root: null, // Use the viewport as the root
@@ -242,6 +414,10 @@
         
                     var observer_story = new IntersectionObserver(callback, options);
                     observer_story.observe(targetStory[targetStory.length-1]);
+
+                }
+                catch (error) {
+                    //pass
                 }
                 
             }
@@ -259,6 +435,7 @@
                             return response.json()
                     })
                     .then(response => {
+                        console.log(response)
                         CreateGenresBoxes(response);
                     });
             }
@@ -275,19 +452,90 @@
                     var create_input = document.createElement('input');
                     create_input.type = "checkbox";
                     create_input.name = "genre";
-                    create_input.className = "checkbox-input";
-                    create_input.value = cleaned_data[i].genre;
+                    create_input.className = "genre-checkbox-input";
                     create_input.value = cleaned_data[i].id;
 
                     var input_label = document.createElement('label');
                     input_label.textContent = cleaned_data[i].genre;
+                    input_label.className = 'genre-label';
+
+                    var popularity = document.createElement('p');
+                    popularity.textContent = `(${cleaned_data[i].popularity})`;
+                    popularity.className = 'genre-popularity';
+
+                    create_input.addEventListener('change', function(){
+                        getPage();
+                    })
 
                     checkbox_wrapper.appendChild(create_input);
                     checkbox_wrapper.appendChild(input_label);
+                    checkbox_wrapper.appendChild(popularity);
                     genres_box.appendChild(checkbox_wrapper);
                 }
 
             }
+        
+            function getTags() {
+            var url = `http://127.0.0.1:8000/get_tags`
+
+            fetch(url, {
+                method: "GET",
+                headers: {
+                    'Content-Type':'application/json',
+                },
+                })
+                .then(response => {
+                        return response.json()
+                })
+                .then(response => {
+                    CreateTagsBoxes(response.tags);
+                });
+            }
+
+            function CreateTagsBoxes(data) {
+                var tags_box = document.getElementById('tags_wrapper');
+
+                for(let i = 0; i < data.length; i++) {
+                    var tag_wrapper = document.createElement('div')
+                    tag_wrapper.className = 'tag-wrapper';
+
+                    var create_input = document.createElement('p');
+                    create_input.textContent = data[i].tag;
+                    create_input.className = 'tag-holder';
+
+                    var popularity = document.createElement('p');
+                    popularity.className = 'tag-popularity';
+                    popularity.textContent = `(${data[i].popularity})`;
+
+                    tag_wrapper.appendChild(create_input);
+                    tag_wrapper.appendChild(popularity);
+
+                    tags_box.appendChild(tag_wrapper);
+
+                    tag_wrapper.addEventListener('click', function() {
+
+                    })
+
+                }
+                
+            }
+            
+            searchfieldIneed.addEventListener('input', function(event) {
+                clearTimeout(delayTimer);
+                delayTimer = setTimeout(() => {
+                    getPage();
+                }, 1000);
+                
+            })
+            
+            for (let i = 0; i < sorting_boxes.length; i++) {
+                sorting_boxes[i].addEventListener('change', function() {
+                    if (this.checked) {
+                        getPage();
+                    }
+                });
+            }
+            
         </script>
 
     {% endblock %}

@@ -1,10 +1,12 @@
 from django.shortcuts import render
 from .models import *
+from django.db.models import Count
 from django.http import HttpResponseRedirect
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from Authentication.models import BaseUserProfile, SubscriptionTimeStampThrough
 import json
+from django.db.models import Q
 
 # Create your views here.
 def getAllStories(request):
@@ -17,8 +19,32 @@ def getSingleStory(request, id):
     
 def getStoryPage(request):
     req_page = int(request.GET.get('page', 1))
+    search_prompt = request.GET.get('search_prompt', None)
+    genres = request.GET.get('genres', None)
+    tags = request.GET.get('tag', None)
+    sort_by = request.GET.get('sort_by', None)
     
-    stories = Post.objects.all().order_by('date_created')[:100]
+    filter_conditions = []
+    
+    if not sort_by:
+        sort_by = 'likes_count'
+    
+    if genres:
+        genres_ids = list(map(int, genres.split(',')))
+        genre_condition = Q(genre__id__in = genres_ids)
+        filter_conditions.append(genre_condition)
+
+    if search_prompt:
+        search_condition = Q(post_title__icontains = search_prompt) | Q(post_description__icontains = search_prompt) | Q(creator_id__writer_pseudo__icontains = search_prompt)
+        filter_conditions.append(search_condition)
+ 
+    if tags:
+        genres_ids = list(map(int, tags.split(',')))
+        tag_condition = Q(tags__id__in = genres_ids)
+        filter_conditions.append(tag_condition)
+
+    
+    stories = Post.objects.filter(*filter_conditions).order_by(sort_by)[:100]
     
     paginated_stories = Paginator(stories, per_page=10)
     get_page = paginated_stories.get_page(req_page)
@@ -57,9 +83,21 @@ def createStory(request):
     
 def getGenres(request):
     if request.method == "GET":
-        genres = PostGenre.objects.all()     
-        return JsonResponse({"data": [genre.serializer() for genre in genres]}, safe=False)
-    
+        genres = PostGenre.objects.all().annotate(popularity = Count('post')).order_by('popularity')[:10]
+            
+        return JsonResponse({"data": [genre.serialize_create_story() for genre in genres]}, safe=False)
+
+def getTags(request):
+    if request.method == "GET":
+        search = request.GET.get('search', None)
+        
+        if search:
+            pass
+        else:
+            tags = PostTags.objects.all().annotate(popularity = Count('post')).order_by('popularity')[:25]
+            
+            return JsonResponse({"success": True, 'tags': [elem.serialize_create_story() for elem in tags]})
+         
 def getWriterStories(request, id):
     if request.method == "GET":
         stories = Post.objects.filter(creator_id__id = id)
@@ -84,6 +122,7 @@ def getDistinctStoryPage(request):
         check_ownership = False
         highlight = request.GET.get('comment', None)
         auth = False
+        notified = False
         
         if request.user.id:
             auth = True
@@ -112,6 +151,8 @@ def getDistinctStoryPage(request):
                     if id not in sessionData.keys():
                         sessionData.update({id: True})
                         post.creator_id.total_story_views_counter += 1
+                        post.views_counter += 1
+                        post.save()
                         get_reader_posts.posts.add(post)
                         get_reader_posts.save()
                         request.session.save()
@@ -119,7 +160,7 @@ def getDistinctStoryPage(request):
             try:
                 notified = SubscriptionTimeStampThrough.objects.get(writer = post.creator_id, reader = user_profile.reader).receive_notifications
             except SubscriptionTimeStampThrough.DoesNotExist:
-                notified = None
+                notified = False
         
         context = {
             "story": post.serializer_single(),

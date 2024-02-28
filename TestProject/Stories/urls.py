@@ -9,6 +9,7 @@ urlpatterns = [
     path('getStoryPage', getStoryPage, name="getstorypage"),
     path('createStory', createStory, name='createstory'),
     path('get_genres', getGenres, name='genres'),
+    path('get_tags', getTags, name='tags'),
     path('get_distinct_story', getDistinctStoryPage, name='story_page'),
     path('get_writer_stories/<int:id>', getWriterStories, name="write_stories"),
     path('get_viewed', getUserViewHistory, name='getviews'),

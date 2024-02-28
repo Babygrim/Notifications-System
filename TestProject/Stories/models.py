@@ -17,12 +17,18 @@ class PostGenre(models.Model):
             'genre': self.genre,
         }
         
+    def serialize_create_story(self):
+        return {
+            'id': self.id,
+            'genre': self.genre,
+            'popularity': self.popularity,
+        }
         
     def __str__(self):
         return self.genre
 
 class PostTags(models.Model):
-    title = models.CharField(max_length=20)
+    title = models.CharField(max_length=30, unique=True)
     
     def serializer(self):
         return {
@@ -30,6 +36,12 @@ class PostTags(models.Model):
             'tag': self.title,
         }
         
+    def serialize_create_story(self):
+        return {
+            'id': self.id,
+            'tag': self.title,
+            'popularity': self.popularity,
+        }
         
     def __str__(self):
         return self.title
@@ -47,9 +59,10 @@ class Post(models.Model):
     date_created = models.DateTimeField(default=timezone.now)            
     likes_count = models.PositiveBigIntegerField(default=0)
     dislikes_count = models.PositiveBigIntegerField(default=0)
+    views_counter = models.PositiveBigIntegerField(default=0)
     
     genre = models.ForeignKey(PostGenre, on_delete=models.DO_NOTHING, null=False)
-    tags = models.ForeignKey(PostTags, on_delete=models.DO_NOTHING, null=True, blank=True)
+    tags = models.ManyToManyField(PostTags)
     
     
     def serializer_all(self):
@@ -60,6 +73,8 @@ class Post(models.Model):
             "image": self.post_image.url,
             "description": self.post_description,
             'created_at': self.whenAdded(),
+            'genre': self.genre.serializer(),
+            'views_counter': self.views_counter,
         }
         
     def whenAdded(self):
@@ -83,6 +98,7 @@ class Post(models.Model):
             'dislikes_count': self.dislikes_count,
             'comments_count': Comment.objects.filter(post=self, parent_comment=None).count(),
             'created_at': self.whenAdded(),
+            'views_counter': self.views_counter,
         }
         
         

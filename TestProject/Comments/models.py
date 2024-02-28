@@ -1,18 +1,19 @@
 from django.db import models
 from Authentication.models import BaseUserProfile
 from Notifications.models import UserStoryCommentedNotification
-from django.utils import timezone
+from django.utils.timezone import now
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from math import floor
 # Create your models here.
+
 class Comment(models.Model):
     creator = models.ForeignKey(BaseUserProfile, on_delete=models.DO_NOTHING)
     post = models.ForeignKey('Stories.Post', on_delete=models.CASCADE)
     comment_body = models.TextField(null = False)
     parent_comment = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True)
     
-    date_created = models.DateTimeField(default=timezone.now)            
+    date_created = models.DateTimeField(default=now)            
     likes_count = models.PositiveBigIntegerField(default=0)
     dislikes_count = models.PositiveBigIntegerField(default=0)
     
@@ -27,7 +28,7 @@ class Comment(models.Model):
                 'creator': self.creator.displayable_name,
                 'creator_id': self.creator.id,
             }
-    
+        
     def serialize_update(self):
         return {
             'replies_count': Comment.objects.filter(parent_comment = self).count(),
@@ -36,7 +37,7 @@ class Comment(models.Model):
         }
         
     def whenAdded(self):
-        current_datetime = timezone.now()
+        current_datetime = now()
         object_added_datetime = self.date_created
         time_difference = current_datetime - object_added_datetime
         minutes = floor(time_difference.total_seconds() / 60)

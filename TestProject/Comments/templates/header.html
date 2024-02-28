@@ -8,6 +8,8 @@
 <style>
     :root {
         overflow-x: hidden;
+        height: 100%;
+        width: 100%;
         font-family: Verdana, Geneva, Tahoma, sans-serif;
         color: rgba(0, 0, 0)
     }
@@ -223,6 +225,7 @@
             <button onclick="location.href = 'http://127.0.0.1:8000/user/login/'" style="width: 10em; height: 2.5em; cursor: pointer; margin: 1em;">Login</button>
             <button onclick="location.href = 'http://127.0.0.1:8000/user/signup/'" style="width: 10em; height: 2.5em; cursor: pointer; margin: 1em;">Signup</button>
         </div>
+        
         {% endif %}
         <div class="dropdown-wrapper" id="clickable_note_zone" style="display: flex; width: 100%; height: 30rem; background-color: rgba(0, 0, 0, 0.2); justify-content: right; background: transparent; position: absolute; pointer-events: none; margin-top: 60vh;">
             <div id="dropdown_options" style="display: none; flex-direction: column; width: 25rem; height: 100%; background-color: lightgoldenrodyellow; border-radius: 10px 10px 10px 10px; margin-right: 5em; z-index: 999; pointer-events: auto;">
@@ -363,6 +366,8 @@
     {% block content %}
 
     {% endblock %}
+
+    <div class="footer" style="height: 10rem; position: relative;"></div>
 
     <script>
         window.addEventListener("DOMContentLoaded", fetchUserInfo());
@@ -657,6 +662,7 @@
                         }
                         else {
                             sessionStorage.setItem('user', JSON.stringify(response.profile));
+                            localStorage.setItem('user', JSON.stringify(response.profile));
                             avatar.src = response.profile.avatar
                             base_name.textContent = response.profile.displayable_name;
                             notifications.innerHTML = `Notifications`;

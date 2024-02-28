@@ -119,7 +119,7 @@
                 <input type="hidden" name="parent_id" id="parent_id" value="">
                 <input type="hidden" name="real_parent_id" id="real_parent_id" value="">
                 <input type="hidden" name="next" value="{{ request.path }}">
-                <button class="submit-button" type="submit" style="width: 100%; margin-top: 0.5em; padding: 5px;">Create Comment</button>
+                <button class="submit-button" type="submit" style="width: 100%; margin-top: 0.5em; padding: 5px;">Reply</button>
             </form>
         </div>    
 
@@ -132,7 +132,7 @@
                 <input type="hidden" name="user_to_notify" id="user_id" value="">
                 <input type="hidden" name="real_parent_id" id="real_parent_id" value="">
                 <input type="hidden" name="next" value="{{ request.path }}">
-                <button class="submit-button" type="submit" style="width: 100%; margin-top: 0.5em; padding: 5px;">Create Comment</button>
+                <button class="submit-button" type="submit" style="width: 100%; margin-top: 0.5em; padding: 5px;">Reply</button>
             </form>
         </div>    
 
@@ -160,7 +160,6 @@
                 var likes_cnt = document.getElementById('like_story');
                 var dislikes_cnt = document.getElementById('dislike_story');
                 var author_id = document.getElementById('author_id');
-
                 var url = `http://127.0.0.1:8000/get_distinct_story?story=${story_id.value}`;
 
                 fetch(url, {
@@ -179,20 +178,21 @@
                         if (!cleaned_data.owner & cleaned_data.subscribed) {
                             subscribe.style.display = 'block';
                             subscribe.innerHTML = 'Unsubscribe';
+                            
+                            if (cleaned_data.get_notif == true) {
+                                get_notif.style.display = 'block';
+                                get_notif.innerHTML = 'Do Not Receive Notifications';
+                            }
+                            else if (cleaned_data.get_notif == false) {
+                                get_notif.style.display = 'block';
+                                get_notif.innerHTML = 'Receive Notifications';
+                            }
                         }
                         else if (!cleaned_data.owner & !cleaned_data.subscribed) {
                             subscribe.style.display = 'block';
                             subscribe.innerHTML = 'Subscribe';
                         }
                         
-                        if (cleaned_data.get_notif == true) {
-                            get_notif.style.display = 'block';
-                            get_notif.innerHTML = 'Do Not Receive Notifications';
-                        }
-                        else if (cleaned_data.get_notif == false) {
-                            get_notif.style.display = 'block';
-                            get_notif.innerHTML = 'Receive Notifications';
-                        }
                     }
 
                     story_title.textContent = cleaned_data.story.title;
@@ -204,7 +204,7 @@
                     comment_cnt.textContent = `${cleaned_data.story.comments_count} Comments`;
                     story_body.textContent = cleaned_data.story.body;
                     likes_cnt.innerHTML = `Likes: ${cleaned_data.story.likes_count}`;
-                    dislikes_cnt.innerHTML = `Dislikes: ${cleaned_data.story.likes_count}`;
+                    dislikes_cnt.innerHTML = `Dislikes: ${cleaned_data.story.dislikes_count}`;
                 })
             }
 
@@ -402,7 +402,9 @@
             }
     
             function CreateRepliesCards(data, j, comment_id) {
+
                 cleaned_data = data;
+                console.log(data);
                 var forms = document.getElementsByClassName('reply-reply-form-wrapper');
 
                 var get_post_id = document.getElementById('story_id');
@@ -416,7 +418,7 @@
                     comment_body.style.textAlign = "left";
         
                     var comment_creator = document.createElement("h3");
-                    comment_creator.innerHTML = `by <a href="http://127.0.0.1:8000/user/view_profile">${data[j].creator}</a>    ${data[j].created_at}`;
+                    comment_creator.innerHTML = `by <a href="http://127.0.0.1:8000/user/view_profile">${data[i].creator}</a>    ${data[i].created_at}`;
                     comment_creator.className = 'comment-creator-title';
         
                     var comment_text = document.createElement("p");

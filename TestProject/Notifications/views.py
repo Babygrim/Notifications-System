@@ -47,7 +47,7 @@ def getUserNotifications(request):
                 for subscription in subscribed_to:
                     subscr_information = SubscriptionTimeStampThrough.objects.get(reader = base_user.reader, writer = subscription)
                     if subscr_information.receive_notifications:
-                        subscr = UserStoryCreatedNotification.objects.filter(creator = subscription).exclude(created_at__lt = subscr_information.when_subscribed)
+                        subscr = UserStoryCreatedNotification.objects.filter(creator = subscription).exclude(created_at__lt = subscr_information.when_subscribed).exclude(id__in = sc_ids)
                         story_created_note += list(subscr)
                     
             comment_replied_note = UserCommentRepliedNotification.objects.filter(receiver = base_user).exclude(id__in=cr_ids)    
