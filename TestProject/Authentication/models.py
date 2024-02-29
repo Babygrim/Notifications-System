@@ -20,7 +20,7 @@ class UserProfileWriter(models.Model):
         return {
             'id': self.id,
             'writer_pseudo': self.writer_pseudo,
-            'subscribers_counter': self.subscribers_counter, 
+            'subscribers_counter': UserProfileReader.objects.filter(subscribed_to = self).count(), 
             'total_likes_counter': self.total_likes_counter, 
             'total_story_views_counter': self.total_story_views_counter,
         }

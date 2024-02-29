@@ -1,12 +1,13 @@
 from django.shortcuts import render
 from .models import *
-from django.db.models import Count
+from django.db.models import Count, Case, When, IntegerField
 from django.http import HttpResponseRedirect
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from Authentication.models import BaseUserProfile, SubscriptionTimeStampThrough
 import json
-from django.db.models import Q
+from django.db.models import Q, Count, Case, When, IntegerField
+from statistics import median
 
 # Create your views here.
 def getAllStories(request):
@@ -23,7 +24,6 @@ def getStoryPage(request):
     genres = request.GET.get('genres', None)
     tags = request.GET.get('tag', None)
     sort_by = request.GET.get('sort_by', None)
-    
     filter_conditions = []
     
     if not sort_by:
@@ -34,17 +34,28 @@ def getStoryPage(request):
         genre_condition = Q(genre__id__in = genres_ids)
         filter_conditions.append(genre_condition)
 
-    if search_prompt:
-        search_condition = Q(post_title__icontains = search_prompt) | Q(post_description__icontains = search_prompt) | Q(creator_id__writer_pseudo__icontains = search_prompt)
-        filter_conditions.append(search_condition)
- 
     if tags:
         genres_ids = list(map(int, tags.split(',')))
         tag_condition = Q(tags__id__in = genres_ids)
         filter_conditions.append(tag_condition)
 
-    
-    stories = Post.objects.filter(*filter_conditions).order_by(sort_by)[:100]
+    if search_prompt:
+        search_condition = tokenizeSearch(search_prompt)
+        
+        case_list = []
+        for key in search_condition.keys():
+            case_list.append(
+                Case(
+                    When(key, then=search_condition[key]), 
+                    default=0, 
+                    output_field=IntegerField())
+            )
+        stories = Post.objects.annotate(num_matches=sum(case_list)).order_by('-num_matches')[:100]
+        # matches_median = median(stories.values_list('num_matches', flat=True))
+        
+        # stories = stories.filter(*filter_conditions, num_matches__gt = matches_median).order_by(sort_by)[:100]
+    else:
+        stories = Post.objects.filter(*filter_conditions).order_by(sort_by)[:100]
     
     paginated_stories = Paginator(stories, per_page=10)
     get_page = paginated_stories.get_page(req_page)
@@ -83,7 +94,7 @@ def createStory(request):
     
 def getGenres(request):
     if request.method == "GET":
-        genres = PostGenre.objects.all().annotate(popularity = Count('post')).order_by('popularity')[:10]
+        genres = PostGenre.objects.annotate(popularity = Count('post')).order_by('popularity')[:25]         #annotate(popularity = Count('post')).order_by('popularity')[:10]
             
         return JsonResponse({"data": [genre.serialize_create_story() for genre in genres]}, safe=False)
 
@@ -94,7 +105,7 @@ def getTags(request):
         if search:
             pass
         else:
-            tags = PostTags.objects.all().annotate(popularity = Count('post')).order_by('popularity')[:25]
+            tags = PostTags.objects.annotate(popularity = Count('post')).order_by('popularity')[:25]
             
             return JsonResponse({"success": True, 'tags': [elem.serialize_create_story() for elem in tags]})
          
@@ -235,4 +246,31 @@ def getUserLikedStories(request):
         get_reader = UserProfileReader.objects.get(pk=user)
         get_viewed = UserLikedPosts.objects.get(reader=get_reader)
         
-        return JsonResponse({"context": [elem.serializer_all() for elem in get_viewed.posts.all()]})
+        return JsonResponse({"context": [elem.serializer_all() for elem in get_viewed.posts.all()]})    
+    
+
+#########################################
+#        ADDITIONAL FUNCTIONS           #
+######################################### 
+
+# SEARCH TOKENIZATION
+def tokenizeSearch(search_request):
+    init = search_request
+    tokenized = search_request.split(' ')
+    search_query = dict()
+    q_query = Q(post_title__icontains = init) | Q(post_description__icontains = init) | Q(creator_id__writer_pseudo__icontains = init) | Q(tags__title__icontains = init)
+    search_query[q_query] = len(init)
+    
+    for word in tokenized:
+        q_query = Q(post_title__icontains = word) | Q(post_description__icontains = word) | Q(creator_id__writer_pseudo__icontains = word) | Q(tags__title__icontains = word)
+        search_query[q_query] = len(word)
+        for j in range(1, len(word)):
+            key1 = word[:-j]
+            key2 = word[j:]
+            q_query = Q(post_title__icontains = key1) | Q(post_description__icontains = key1) | Q(creator_id__writer_pseudo__icontains = key1) | Q(tags__title__icontains = key1) | Q(post_title__icontains = key2) | Q(post_description__icontains = key2) | Q(creator_id__writer_pseudo__icontains = key2) | Q(tags__title__icontains = key2)
+            search_query[q_query] = len(key1) + 1
+            
+            q_query = Q(post_title__icontains = key1) | Q(post_description__icontains = key1) | Q(creator_id__writer_pseudo__icontains = key1) | Q(tags__title__icontains = key1) | Q(post_title__icontains = key2) | Q(post_description__icontains = key2) | Q(creator_id__writer_pseudo__icontains = key2) | Q(tags__title__icontains = key2)
+            search_query[q_query] = len(key2)
+
+    return search_query

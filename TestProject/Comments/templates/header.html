@@ -212,20 +212,24 @@
         <div class="stories-wrapper" style="display: flex; padding: 1em;">
             <button onclick="location.href = 'http://127.0.0.1:8000/'" style="width: 10em; height: 2.5em; cursor: pointer;">All Stories</button>
         </div>
-        {% if request.user.is_authenticated %}
-            <input type="hidden" id="user_id" value="{{request.user.id}}">
-    
+        {% if user.is_authenticated %}
             <div class="notifications-wrapper" style="display: flex; padding: 1em;">
                 <button class="dropdown" id="notifications" style="width: 10em; height: 2.5em; cursor: pointer;"></button>
             </div>
             <img src="" class="avatar" alt="User Avatar" id="profile_options">
         {% else %}
-
-        <div class="auth-wrapper" style="display: flex;">
-            <button onclick="location.href = 'http://127.0.0.1:8000/user/login/'" style="width: 10em; height: 2.5em; cursor: pointer; margin: 1em;">Login</button>
-            <button onclick="location.href = 'http://127.0.0.1:8000/user/signup/'" style="width: 10em; height: 2.5em; cursor: pointer; margin: 1em;">Signup</button>
-        </div>
-        
+            <div class="auth-wrapper" style="display: flex;">
+                <button onclick="location.href = 'http://127.0.0.1:8000/user/login/'" style="width: 10em; height: 2.5em; cursor: pointer; margin: 1em;">Login</button>
+                <button onclick="location.href = 'http://127.0.0.1:8000/user/signup/'" style="width: 10em; height: 2.5em; cursor: pointer; margin: 1em;">Signup</button>
+            </div>
+            <script>
+                try {
+                    sessionStorage.removeItem('user');
+                }
+                catch (error) {
+                    //pass
+                }
+            </script>
         {% endif %}
         <div class="dropdown-wrapper" id="clickable_note_zone" style="display: flex; width: 100%; height: 30rem; background-color: rgba(0, 0, 0, 0.2); justify-content: right; background: transparent; position: absolute; pointer-events: none; margin-top: 60vh;">
             <div id="dropdown_options" style="display: none; flex-direction: column; width: 25rem; height: 100%; background-color: lightgoldenrodyellow; border-radius: 10px 10px 10px 10px; margin-right: 5em; z-index: 999; pointer-events: auto;">
@@ -624,7 +628,6 @@
         
         function fetchUserInfo() {
             let subscribe = document.getElementById('subscribe');
-            let user = document.getElementById('user_id');
             let avatar = document.getElementById('profile_options');
             let base_name = document.getElementById('base_name');
             let writer_name = document.getElementById('writer_name');
@@ -637,8 +640,11 @@
             let view_liked = document.getElementById('view_liked');
             let notifications = document.getElementById('notifications');
 
-            try {
-                var url = `http://127.0.0.1:8000/user/view_profile?user=${user.value}`
+            var userValue = sessionStorage.getItem('user');
+            var user = userValue !== null ? userValue : null;
+
+            if (user == null) {
+                var url = `http://127.0.0.1:8000/user/view_profile`
 
                 fetch(url, {
                     method: "GET",
@@ -650,6 +656,7 @@
                             return response.json()
                     })
                     .then(response => {
+                        console.log(response);
                         if (response.unauth) {
                             try {
                                 console.log('wehere')
@@ -662,7 +669,6 @@
                         }
                         else {
                             sessionStorage.setItem('user', JSON.stringify(response.profile));
-                            localStorage.setItem('user', JSON.stringify(response.profile));
                             avatar.src = response.profile.avatar
                             base_name.textContent = response.profile.displayable_name;
                             notifications.innerHTML = `Notifications`;
@@ -689,8 +695,31 @@
                         }
                 })
             }
-            catch (error) {
-                // pass
+            else {
+                user = JSON.parse(user);
+                avatar.src = user.avatar;
+                base_name.textContent = user.displayable_name;
+                notifications.innerHTML = `Notifications`;
+
+                if (!user.bound_writer_profile) {
+                    writer_status.style.display = 'block';
+                    writer_name.textContent = `Writer`;
+                }
+                else {
+                    reader = user.bound_writer_profile;
+                    writer_name.textContent = `Writer '${user.bound_writer_profile.writer_pseudo}'`;
+                    writer_block.style.display = 'block';
+                    get_user_stories_link.href = `http://127.0.0.1:8000/get_writer_stories/${user.bound_writer_profile.id}`;
+                }
+                if (!user.bound_reader_profile) {
+                    reader_name.textContent = `Reader`;
+                }
+                else {
+                    reader_name.textContent = `Reader '${user.bound_user.username}'`;
+                    get_subscr.href = `http://127.0.0.1:8000/user/subscriptions?reader=${user.bound_reader_profile.reader_id}`;
+                    view_history.href = `http://127.0.0.1:8000/get_viewed?reader=${user.bound_reader_profile.reader_id}`;
+                    view_liked.href = `http://127.0.0.1:8000/get_liked?reader=${user.bound_reader_profile.reader_id}`;
+                }
             }
         }
     </script>

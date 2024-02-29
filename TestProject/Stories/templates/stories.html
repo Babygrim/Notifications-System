@@ -197,20 +197,20 @@
                         </div>
                         <div class="sort-by-wrapper" id="sort_by_wrapper">
                             <div class="distinct-checkbox">
-                                <input type="radio" name="sorting" value="-likes_count" class="distinct-choice">
-                                <label>Popularity Ascending</label>
-                            </div>
-                            <div class="distinct-checkbox">
                                 <input type="radio" name="sorting" value="likes_count" class="distinct-choice" checked>
                                 <label>Popularity Descending</label>
                             </div>
                             <div class="distinct-checkbox">
-                                <input type="radio" name="sorting" value="-dislikes_count" class="distinct-choice">
-                                <label>Dislikes Ascending</label>
+                                <input type="radio" name="sorting" value="-likes_count" class="distinct-choice">
+                                <label>Popularity Ascending</label>
                             </div>
                             <div class="distinct-checkbox">
                                 <input type="radio" name="sorting" value="dislikes_count" class="distinct-choice">
                                 <label>Dislikes Descending</label>
+                            </div>
+                            <div class="distinct-checkbox">
+                                <input type="radio" name="sorting" value="-dislikes_count" class="distinct-choice">
+                                <label>Dislikes Ascending</label>
                             </div>
                             <div class="distinct-checkbox">
                                 <input type="radio" name="sorting" value="date_created" class="distinct-choice">
@@ -452,6 +452,7 @@
                     var create_input = document.createElement('input');
                     create_input.type = "checkbox";
                     create_input.name = "genre";
+                    create_input.checked = true;
                     create_input.className = "genre-checkbox-input";
                     create_input.value = cleaned_data[i].id;
 

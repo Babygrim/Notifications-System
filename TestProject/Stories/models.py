@@ -9,7 +9,7 @@ from django.utils import timezone
 # Create your models here.
 
 class PostGenre(models.Model):
-    genre = models.CharField(max_length=20)
+    genre = models.CharField(max_length=20, unique=True)
 
     def serializer(self):
         return {
@@ -77,6 +77,20 @@ class Post(models.Model):
             'views_counter': self.views_counter,
         }
         
+    def serializer_all_search_engine(self):
+        return {
+            "id": self.id,
+            "creator": self.creator_id.serialize_load(),
+            "title": self.post_title,
+            "image": self.post_image.url,
+            "description": self.post_description,
+            'created_at': self.whenAdded(),
+            'genre': self.genre.serializer(),
+            'views_counter': self.views_counter,
+            'relevancy': self.num_matches,
+        }
+        
+        
     def whenAdded(self):
         current_datetime = timezone.now()
         object_added_datetime = self.date_created
@@ -137,6 +151,9 @@ def user_created(sender, instance, created, **kwargs):
 @receiver(post_save, sender=Post)
 def story_created(sender, instance, created, **kwargs):
     if created:
-        notification = UserStoryCreatedNotification(creator=instance.creator_id, source=instance)
-        notification.save()
-        print("Notification Created")
+        if UserProfileReader.objects.filter(subscribed_to = instance.creator_id).count() > 0:
+            notification = UserStoryCreatedNotification(creator=instance.creator_id, source=instance)
+            notification.save()
+            print("Writer has >0 Subscribers. Notification Created.")
+        else:
+            print("Writer has 0 Subscribers. Notification Was Not Created")
