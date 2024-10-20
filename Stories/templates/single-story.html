@@ -295,39 +295,43 @@
             function LikeDislikeComment(comment_id, type, index, ctype = 'comment') {
                 let url = `http://127.0.0.1:8000/comments/likeunlike`
                 let token = document.getElementById('token');
-    
-                fetch(url, {
-                    method: "POST",
-                    headers:{
-                        'Content-Type':'application/json',
-                        'X-CSRFToken': token.value,
-                    },
-                    body: JSON.stringify({'comment_id': comment_id, 'type': type}) 
-                }).then(response => {
-                    return response.json()
-    
-                }).then(response => {
-                    let cleaned_data = response.data;
-                    if (ctype == 'comment'){ 
-                        var comment = document.getElementsByClassName('buttons-wrapper');
-                    }
-                    else {
-                        var comment = document.getElementsByClassName('reply-buttons-wrapper');
-                    }
-                    let fields = comment[index].childNodes;
-    
-                    for (let i = 0; i < fields.length; i++) {
-                        if (fields[i].className.includes('dislike')){
-                            fields[i].textContent = `Dislikes: ${cleaned_data.dislikes_count}`
+                
+                if (user_information) {
+                    fetch(url, {
+                        method: "POST",
+                        headers:{
+                            'Content-Type':'application/json',
+                            'X-CSRFToken': token.value,
+                        },
+                        body: JSON.stringify({'comment_id': comment_id, 'type': type}) 
+                    }).then(response => {
+                        return response.json()
+        
+                    }).then(response => {
+                        let cleaned_data = response.data;
+                        if (ctype == 'comment'){ 
+                            var comment = document.getElementsByClassName('buttons-wrapper');
                         }
-                        else if (fields[i].className.includes('like')){
-                            fields[i].textContent = `Likes: ${cleaned_data.likes_count}`
+                        else {
+                            var comment = document.getElementsByClassName('reply-buttons-wrapper');
                         }
-                        if (fields[i].className.includes('enabled') || fields[i].className.includes('disabled')){
-                            fields[i].textContent = `Replies: ${cleaned_data.replies_count}`
+                        let fields = comment[index].childNodes;
+        
+                        for (let i = 0; i < fields.length; i++) {
+                            if (fields[i].className.includes('dislike')){
+                                fields[i].textContent = `Dislikes: ${cleaned_data.dislikes_count}`
+                            }
+                            else if (fields[i].className.includes('like')){
+                                fields[i].textContent = `Likes: ${cleaned_data.likes_count}`
+                            }
+                            if (fields[i].className.includes('enabled') || fields[i].className.includes('disabled')){
+                                fields[i].textContent = `Replies: ${cleaned_data.replies_count}`
+                            }
                         }
-                    }
-                })
+                    })
+                } else {
+                    buildModal("You must log in in order to like comments");
+                }
             }
     
             function ViewReplyForm(k, replies_box = null) {
@@ -723,23 +727,27 @@
                 var dislikes = document.getElementById('dislike_story');
 
                 var url = `http://127.0.0.1:8000/react_story`;
-
-                fetch(url, {
-                    method: "POST",
-                    headers:{
-                        'Content-Type':'application/json',
-                        'X-CSRFToken': token.value,
-                    },
-                    body: JSON.stringify({'story': story_id.value, 'type': type, 'reader': user_reader.bound_reader_profile.reader_id}) 
-                }).then(response => {
-                    return response.json();
-                }).then(response => {
-                    if (response.success) {
-                        likes.innerHTML = `Likes: ${response.reactions.likes}`;
-                        dislikes.innerHTML = `Dislikes: ${response.reactions.dislikes}`;
-                    }
-                })
-                return
+                
+                if (user_reader) {
+                    fetch(url, {
+                        method: "POST",
+                        headers:{
+                            'Content-Type':'application/json',
+                            'X-CSRFToken': token.value,
+                        },
+                        body: JSON.stringify({'story': story_id.value, 'type': type, 'reader': user_reader.bound_reader_profile.reader_id}) 
+                    }).then(response => {
+                        return response.json();
+                    }).then(response => {
+                        if (response.success) {
+                            likes.innerHTML = `Likes: ${response.reactions.likes}`;
+                            dislikes.innerHTML = `Dislikes: ${response.reactions.dislikes}`;
+                        }
+                    })
+                    return
+                } else {
+                    buildModal("You must log in in order to like stories")
+                }
             }
         </script>
     {% endblock %}

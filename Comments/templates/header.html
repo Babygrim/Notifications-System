@@ -200,6 +200,45 @@
         padding: 5px;
     }
 
+    #modal_popup {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1; /* Sit on top */
+        padding-top: 100px; /* Location of the box */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    }
+
+    /* Modal Content */
+    .modal_popup-content {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 40%;
+        text-align: center;
+    }
+
+    /* The Close Button */
+    .close-modal {
+        color: #aaaaaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .close-modal:hover,
+    .close-modal:focus {
+        color: #000;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
 </style>
 
 <body>
@@ -363,6 +402,13 @@
                 </a>
             </div>
 
+            </div>
+        </div>
+
+        <div id="modal_popup" class="modal">
+            <div class="modal_popup-content">
+            <span class="close-modal">&times;</span>
+            <p class="modal-text"></p>
             </div>
         </div>
     </div>
@@ -719,6 +765,29 @@
                     get_subscr.href = `http://127.0.0.1:8000/user/subscriptions?reader=${user.bound_reader_profile.reader_id}`;
                     view_history.href = `http://127.0.0.1:8000/get_viewed?reader=${user.bound_reader_profile.reader_id}`;
                     view_liked.href = `http://127.0.0.1:8000/get_liked?reader=${user.bound_reader_profile.reader_id}`;
+                }
+            }
+        }
+
+        function buildModal(text) {
+            var modal = document.getElementById("modal_popup");
+            modal.style.display = "block";
+
+            // Get the <span> element that closes the modal
+            var span = modal.getElementsByClassName("close-modal")[0];
+
+            // When the user clicks on <span> (x), close the modal
+            span.onclick = function() {
+                modal.style.display = "none";
+            }
+
+            var text_holder = modal.getElementsByClassName("modal-text")[0];
+            text_holder.innerHTML = text;
+
+            // When the user clicks anywhere outside of the modal, close it
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
                 }
             }
         }
