@@ -8,6 +8,7 @@ from Authentication.models import BaseUserProfile, SubscriptionTimeStampThrough
 import json
 from django.db.models import Q, Count, Case, When, IntegerField
 from statistics import median
+from django.shortcuts import redirect
 
 # Create your views here.
 def getAllStories(request):
@@ -131,7 +132,7 @@ def getDistinctStoryPage(request):
         
         check_subscription = False
         check_ownership = False
-        highlight = request.GET.get('comment', None)
+        #highlight = request.GET.get('comment', None)
         auth = False
         notified = False
         
@@ -187,58 +188,67 @@ def getDistinctStoryPage(request):
 def reactToStory(request):
     if request.method == "POST":
         data = json.loads(request.body)
+        story_id = int(data.get('story'))
+        story = Post.objects.get(pk=story_id)
         
-        if request.user:
+        if not request.user.is_authenticated:
+            return redirect('/')
+        
+        user = BaseUserProfile.objects.get(id=request.user.id)
+        
+        if user.writer:
+            if user.writer.id == story.creator_id.id:
+                return JsonResponse({"success": False, 'reactions': {'likes': story.likes_count, 'dislikes':story.dislikes_count}, 'reason': "You cannot like or dislike your own stories"}) 
+        
+        sessionData = request.session.get('story_like_variable')
+        react_type = data.get('type')
+        
+        string_story_id = str(story_id)
+        
+        
+        reader_liked_stories = UserLikedPosts.objects.get(reader__id=int(data.get('reader')))
+            
+        if sessionData == None:
+            request.session['story_like_variable'] = {
+                    'dislikes': {},
+                }
+            request.session.save()
             sessionData = request.session.get('story_like_variable')
-            react_type = data.get('type')
-            story_id = int(data.get('story'))
-            string_story_id = str(story_id)
+        
+        if react_type == 'like_story':  
+            if story in reader_liked_stories.posts.all():
+                reader_liked_stories.posts.remove(story)
+                story.likes_count -= 1    
             
-            story = Post.objects.get(pk=story_id)
-            reader_liked_stories = UserLikedPosts.objects.get(reader__id=int(data.get('reader')))
-                
-            if sessionData == None:
-                request.session['story_like_variable'] = {
-                        'dislikes': {},
-                    }
-                request.session.save()
-                sessionData = request.session.get('story_like_variable')
-            
-            if react_type == 'like_story':  
-                if story in reader_liked_stories.posts.all():
-                    reader_liked_stories.posts.remove(story)
-                    story.likes_count -= 1    
-             
-                else:
-                    reader_liked_stories.posts.add(story)
-                    story.likes_count += 1      
-                    
-                    if string_story_id in sessionData['dislikes'].keys():
-                        story.dislikes_count -= 1
-
-                        sessionData['dislikes'].pop(string_story_id, None)
-           
             else:
+                reader_liked_stories.posts.add(story)
+                story.likes_count += 1      
+                
                 if string_story_id in sessionData['dislikes'].keys():
                     story.dislikes_count -= 1
-                    sessionData['dislikes'].pop(string_story_id, None)
-                else:
-                    story.dislikes_count += 1
-                    sessionData['dislikes'].update({story_id: True})
-                    
-                    if story in reader_liked_stories.posts.all():
-                        reader_liked_stories.posts.remove(story)
-                        story.likes_count -= 1
 
-                        
-                        
-            request.session.save()
-            story.save()
-            reader_liked_stories.save()
-            print(sessionData)
-            
+                    sessionData['dislikes'].pop(string_story_id, None)
+        
+        else:
+            if string_story_id in sessionData['dislikes'].keys():
+                story.dislikes_count -= 1
+                sessionData['dislikes'].pop(string_story_id, None)
+            else:
+                story.dislikes_count += 1
+                sessionData['dislikes'].update({story_id: True})
+                
+                if story in reader_liked_stories.posts.all():
+                    reader_liked_stories.posts.remove(story)
+                    story.likes_count -= 1
+                    
+                    
+        request.session.save()
+        story.save()
+        reader_liked_stories.save()
+        #print(sessionData)
         return JsonResponse({"success": True, 'reactions': {'likes': story.likes_count, 'dislikes':story.dislikes_count}})
-                        
+            
+        
 def getUserLikedStories(request):
     if request.method == "GET":
         user = request.GET.get('reader')

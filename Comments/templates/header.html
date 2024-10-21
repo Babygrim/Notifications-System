@@ -78,7 +78,7 @@
         width: 100%; 
         flex-direction: row; 
         align-items: center; 
-        justify-content: right; 
+        justify-content: space-between; 
         height: 10vh; 
         background-color: rgb(250, 234, 214); 
         position: sticky;
@@ -246,30 +246,28 @@
         <input type="hidden" id="token"  name="csrfmiddlewaretoken" value="{{ csrf_token }}">
         <input type="hidden" id="highlight" value="{{context.comment_id}}">
         <input type="hidden" id="author_id" value="{{context.story.creator.id}}">
+        <input type="hidden" id="user_value" value="{{user.is_authenticated}}">
 
-
-        <div class="stories-wrapper" style="display: flex; padding: 1em;">
-            <button onclick="location.href = 'http://127.0.0.1:8000/'" style="width: 10em; height: 2.5em; cursor: pointer;">All Stories</button>
+        <div class="left-header-part" style="display: flex; padding: 1em; margin-left: 2em; margin-right: 2em;">
+            <a href="/"><img src="/media/logo/logoipsum-330.svg"></a>
         </div>
-        {% if user.is_authenticated %}
-            <div class="notifications-wrapper" style="display: flex; padding: 1em;">
-                <button class="dropdown" id="notifications" style="width: 10em; height: 2.5em; cursor: pointer;"></button>
-            </div>
-            <img src="" class="avatar" alt="User Avatar" id="profile_options">
-        {% else %}
-            <div class="auth-wrapper" style="display: flex;">
-                <button onclick="location.href = 'http://127.0.0.1:8000/user/login/'" style="width: 10em; height: 2.5em; cursor: pointer; margin: 1em;">Login</button>
-                <button onclick="location.href = 'http://127.0.0.1:8000/user/signup/'" style="width: 10em; height: 2.5em; cursor: pointer; margin: 1em;">Signup</button>
-            </div>
-            <script>
-                try {
-                    sessionStorage.removeItem('user');
-                }
-                catch (error) {
-                    //pass
-                }
-            </script>
+
+        <div class="right-header-part" style="display: flex; padding: 1em;">
+            <!-- <div class="stories-wrapper" style="display: flex; padding: 1em;">
+                <button onclick="location.href = 'http://127.0.0.1:8000/'" style="width: 10em; height: 2.5em; cursor: pointer;">All Stories</button>
+            </div> -->
+            {% if user.is_authenticated %}
+                <div class="notifications-wrapper" style="display: flex; padding: 1em;">
+                    <button class="dropdown" id="notifications" style="width: 10em; height: 2.5em; cursor: pointer;"></button>
+                </div>
+                <img src="" class="avatar" alt="User Avatar" id="profile_options">
+            {% else %}
+                <div class="auth-wrapper" style="display: flex;">
+                    <button onclick="location.href = 'http://127.0.0.1:8000/user/login/'" style="width: 10em; height: 2.5em; cursor: pointer; margin: 1em;">Login</button>
+                    <button onclick="location.href = 'http://127.0.0.1:8000/user/signup/'" style="width: 10em; height: 2.5em; cursor: pointer; margin: 1em;">Signup</button>
+                </div>
         {% endif %}
+        </div>
         <div class="dropdown-wrapper" id="clickable_note_zone" style="display: flex; width: 100%; height: 30rem; background-color: rgba(0, 0, 0, 0.2); justify-content: right; background: transparent; position: absolute; pointer-events: none; margin-top: 60vh;">
             <div id="dropdown_options" style="display: none; flex-direction: column; width: 25rem; height: 100%; background-color: lightgoldenrodyellow; border-radius: 10px 10px 10px 10px; margin-right: 5em; z-index: 999; pointer-events: auto;">
                 <div class="heading-wrapper" style="width: 100%; height: 10%;  border-bottom: 1px solid rgba(0, 0, 0, 0.2);">
@@ -284,23 +282,24 @@
         <div class="profile-dropdown-wrapper" id="clickable_profile_zone"  style="display: flex; width: 100%; height: 30rem; background-color: rgba(0, 0, 0, 0.2); justify-content: right; background: transparent; position: absolute; pointer-events: none; margin-top: 60vh;">
             <div id="profile_dropdown_options" style="display: none; width: 15rem; height: min-content; background-color: lightgoldenrodyellow; border-radius: 10px 10px 10px 10px; z-index: 999; pointer-events: auto; margin-right: 1em; flex-direction: column;">
                 
-                <div class="heading-baseuser-wrapper" style="width: 100%; height: 10%;  border-bottom: 1px solid rgba(0, 0, 0, 0.2);">
+                <!-- <div class="heading-baseuser-wrapper" style="width: 100%; height: 10%;  border-bottom: 1px solid rgba(0, 0, 0, 0.2);">
                     <h3 style="font-family: Verdana, Geneva, Tahoma, sans-serif; margin-left: 0.4em; margin-top: 0.25em; margin-bottom: 0.25em; padding: 5px;" id="base_name"></h3>
-                </div>
+                </div> -->
 
+                
+                <div class="heading-reader-wrapper" style="width: 100%; height: 10%;  border-bottom: 1px solid rgba(0, 0, 0, 0.2);">
+                    <h3 style="font-family: Verdana, Geneva, Tahoma, sans-serif; margin-left: 0.4em; margin-top: 0.25em; margin-bottom: 0.25em; padding: 5px; font-size: 0.9rem;" id="reader_name"></h3>
+                </div>
+                
                 <div class="profile-option" style="width: 100%;">
-                    <a href="http://127.0.0.1:8000/user/view_profile?user={{request.user.id}}" style="display: flex; text-decoration: none; height: 100%;">
+                    <a href="http://127.0.0.1:8000/user/view_profile" style="display: flex; text-decoration: none; height: 100%;">
                         <div class="profile-link"">
                             <h3>User Options</h3>
                         </div>
                     </a>
                 </div>
-                
-                <div class="heading-reader-wrapper" style="width: 100%; height: 10%;  border-bottom: 1px solid rgba(0, 0, 0, 0.2); border-top: 1px solid rgba(0, 0, 0, 0.2);">
-                    <h3 style="font-family: Verdana, Geneva, Tahoma, sans-serif; margin-left: 0.4em; margin-top: 0.25em; margin-bottom: 0.25em; padding: 5px; font-size: 0.9rem;" id="reader_name"></h3>
-                </div>
 
-                <div class="profile-option">
+                <!-- <div class="profile-option">
                     <a href="http://127.0.0.1:8000/createStory" style="display: flex; text-decoration: none; height: 100%;">
                         <div class="create-story-link">
                             <h3 style="font-size: 0.8rem; font-family: Verdana, Geneva, Tahoma, sans-serif; margin-left: 1em;">Reader Options</h3>
@@ -314,7 +313,7 @@
                             <h3 style="font-size: 0.8rem; font-family: Verdana, Geneva, Tahoma, sans-serif; margin-left: 1em;">Reader Statistics</h3>
                         </div>
                     </a>
-                </div>
+                </div> -->
 
                 <div class="profile-option" style="width: 100%">
                     <a href="" id="view_liked">
@@ -362,13 +361,13 @@
                     </a>
                 </div>
                 
-                <div class="profile-option" id="writer_button" style="width: 100%">
+                <!-- <div class="profile-option" id="writer_button" style="width: 100%">
                     <a href="http://127.0.0.1:8000/user/become_writer" style="display: flex; text-decoration: none; height: 100%;">
                         <div class="create-story-link">
                             <h3 style="font-size: 0.8rem; font-family: Verdana, Geneva, Tahoma, sans-serif; margin-left: 1em;" >Writer Statistics</h3>
                         </div>
                     </a>
-                </div>
+                </div> -->
 
                 <div class="profile-option" id="writer_button" style="width: 100%">
                     <a href="" style="display: flex; text-decoration: none; height: 100%;" id="get_user_stories">
@@ -385,7 +384,6 @@
                         </div>
                     </a>
                 </div>
-
             </div>
 
 
@@ -420,354 +418,369 @@
     <div class="footer" style="height: 10rem; position: relative;"></div>
 
     <script>
-        window.addEventListener("DOMContentLoaded", fetchUserInfo());
-        var notification_dropdown = document.getElementById('dropdown_options');
-        var toggleButton = document.getElementById('notifications');
-        var profilePicture = document.getElementById('profile_options')
-        var profile_dropdown = document.getElementById('profile_dropdown_options');
+        // const MAINURL = 'http://127.0.0.1:8000';
+        let if_user = document.getElementById('user_value');
+        if (if_user.value === 'True') {
+            const MAINURL = 'http://127.0.0.1:8000';
 
-        var clickable_note_zone = document.getElementById('clickable_note_zone');
-        var clickable_profile_zone = document.getElementById('clickable_profile_zone');
+            window.addEventListener("DOMContentLoaded", fetchUserInfo());
+            var notification_dropdown = document.getElementById('dropdown_options');
+            var toggleButton = document.getElementById('notifications');
+            var profilePicture = document.getElementById('profile_options')
+            var profile_dropdown = document.getElementById('profile_dropdown_options');
 
-        var scrollable_note_window_part = document.getElementById('notifications_window');
-        
-        var notification_pages_info = null;
-        var reader = null;
+            var clickable_note_zone = document.getElementById('clickable_note_zone');
+            var clickable_profile_zone = document.getElementById('clickable_profile_zone');
 
-        window.addEventListener('click', function(event) {
-            if (event.target == profilePicture){
-                notification_dropdown.style.display = "none";
+            var scrollable_note_window_part = document.getElementById('notifications_window');
+            
+            var notification_pages_info = null;
+            var reader = null;
 
-                if (profile_dropdown.style.display == "none") {
-                    profile_dropdown.style.display = "flex";
+            // closed initially and always
+            profile_dropdown.style.display == "none";
+
+            window.addEventListener('click', function(event) {
+                if (event.target == profilePicture){
+                    notification_dropdown.style.display = "none";
+
+                    if (profile_dropdown.style.display == "none") {
+                        profile_dropdown.style.display = "flex";
+                    }
+                    else {
+                        profile_dropdown.style.display = "none";
+                    }
+
                 }
-                else {
+                else if (event.target == toggleButton) {
+                    profile_dropdown.style.display = "none";
+                    
+                    if (notification_dropdown.style.display == "none") {
+                        notification_dropdown.style.display = "flex";
+                        
+                        var children = scrollable_note_window_part.getElementsByClassName('notification-box');
+                        if (children.length === 0) {
+                            getUserNotifications(1);
+                        }
+                        
+                    }
+                    else {
+                        notification_dropdown.style.display = "none";
+                    }
+
+
+                }
+                else if (event.target != toggleButton & event.target != profilePicture & !clickable_note_zone.contains(event.target) & !clickable_profile_zone.contains(event.target)){
+                    notification_dropdown.style.display = "none";
                     profile_dropdown.style.display = "none";
                 }
-
-            }
-            else if (event.target == toggleButton) {
-                profile_dropdown.style.display = "none";
-                
-                if (notification_dropdown.style.display == "none") {
-                    notification_dropdown.style.display = "flex";
-                    
-                    var children = scrollable_note_window_part.getElementsByClassName('notification-box');
-                    if (children.length === 0) {
-                        getUserNotifications(1);
-                    }
-                    
-                }
                 else {
-                    notification_dropdown.style.display = "none";
+                    //pass
                 }
+            });
 
-
-            }
-            else if (event.target != toggleButton & event.target != profilePicture & !clickable_note_zone.contains(event.target) & !clickable_profile_zone.contains(event.target)){
-                notification_dropdown.style.display = "none";
-                profile_dropdown.style.display = "none";
-            }
-            else {
-                //pass
-            }
-        });
-
-        function getUserNotifications(page) {
-            var user = JSON.parse(sessionStorage.getItem('user'));
-            
-            fetch(`http://127.0.0.1:8000/notifications/get_notifications?user=${user.id}&page=${page}`, {
-                method: "GET",
-                headers:{
-                    'Content-Type':'application/json',
-                },
-                })
-                .then(response => {
-                    return response.json();
-                })
-                .then(response => {
-                    notification_pages_info = response.data.page;
-                    CreateNotificationsBoxes(response.data.notifications);
-                });
-
-            
-        }
-
-        function CreateNotificationsBoxes(data) {
-            console.log(data);
-            var button = document.getElementById('notifications')
-            var modal_content = document.getElementById('notifications_window')
-            var token = document.getElementById('token')
-
-            for (let i = 0; i < data.length; i++){
-                var comment_body = document.createElement("div");
-                comment_body.className = "notification-box";
-
-                if (data[i].admin) {
-                    var content_text = document.createElement("p");
-                    
-                    comment_body.addEventListener('click', function() {
-                        var links = document.getElementsByClassName('notification-link');
-                        var elementsArray = Array.from(links);
-
-                        if (elementsArray.every(link => event.target != link)) {
-                            var url = `http://127.0.0.1:8000/story/${data[i].post_id}`;
-
-                            var fetch_url = `http://127.0.0.1:8000/notifications/mark_as_read/`
-
-                            fetch(fetch_url, {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "X-CSRFToken": token.value,
-                                },
-                                body: JSON.stringify({"note_id": data[i].id, "type": "ao"})
-
-                            }).then(response => {
-                                window.location.replace(url);
-                            })
-                        }
-                    })
-
-                    content_text.innerHTML = data[i].message + ` Lasts Until: ${data[i].expiration_date}.`;
-                }
-                else if (data[i].story_commented) {
-                    comment_body.addEventListener('click', function() {
-                        var links = document.getElementsByClassName('notification-link');
-                        var elementsArray = Array.from(links);
-
-                        if (elementsArray.every(link => event.target != link)) {
-                            var url = `http://127.0.0.1:8000/story/${data[i].post_id}`;
-                            let note = data[i].id;
- 
-                            var fetch_url = `http://127.0.0.1:8000/notifications/mark_as_read/`
-
-                            fetch(fetch_url, {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "X-CSRFToken": token.value,
-                                },
-                                body: JSON.stringify({"note_id": note, "type": "scom"})
-
-                            }).then(response => {
-                                sessionStorage.setItem('notification_comment_data', JSON.stringify({
-                                    'comment': data[i].comment_id,
-                                    'comment_type': 'main',
-                                    'parent': null,
-                                }))
-                                window.location.replace(url);   
-                            })
-                            
-                        }
-                    })
-
-                    var content_text = document.createElement("p");
-                    content_text.innerHTML = `You received new commentary on your story '${data[i].post_title}' from user <a href="http:/127.0.0.1:8000/user/view_profile" class="notification-link">${data[i].comment_creator.name}</a>`;
-                }
-                else if (data[i].story){
-                    comment_body.addEventListener('click', function() {
-                        console.log(data[i]);
-                        var links = document.getElementsByClassName('notification-link');
-                        var elementsArray = Array.from(links);
-
-                        console.log(data[i].post_name);
-                        var url = `http://127.0.0.1:8000/story/${data[i].postId}`
-                        
-                        var fetch_url = `http://127.0.0.1:8000/notifications/mark_as_read/`
-
-                        fetch(fetch_url, {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRFToken": token.value,
-                            },
-                            body: JSON.stringify({"note_id": data[i].id, "type": "sc"})
-
-                        }).then(response => {
-                            window.location.replace(url);
-                        })
-
-                    })
-
-                    var content_text = document.createElement("p");
-                    content_text.innerHTML = `Author '${data[i].creator_username}' created new story '${data[i].post_name}'. Click this notification to check it out!`;
-                    
-                }
-                else if (data[i].comment) {
-                    comment_body.addEventListener('click', function() {
-                        var links = document.getElementsByClassName('notification-link');
-                        var elementsArray = Array.from(links);
-
-                        if (elementsArray.every(link => event.target != link)) {
-
-                            var url = `http://127.0.0.1:8000/story/${data[i].post_id}`;
-
-                            var fetch_url = `http://127.0.0.1:8000/notifications/mark_as_read/`
-
-                            fetch(fetch_url, {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "X-CSRFToken": token.value,
-                                },
-                                body: JSON.stringify({"note_id": data[i].id, "type": "cr"})
-
-                            }).then(response => {
-                                sessionStorage.setItem('notification_comment_data', JSON.stringify({
-                                    'comment': data[i].reply_id,
-                                    'comment_type': 'reply',
-                                    'parent': data[i].parent_comment_id
-                                }))
-                                window.location.replace(url);  
-                            })
-                            
-                        }
-                    })
-
-                    var content_text = document.createElement("p");
-                    content_text.innerHTML = `You received new reply on your commentary on Story '${data[i].post_title}' from User <a href="http://127.0.0.1:8000/user/view_profile" class="notification-link">${data[i].creator.name}</a>`;
-                }
+            function getUserNotifications(page) {
+                var user = JSON.parse(sessionStorage.getItem('user'));
                 
-                var timestamp = document.createElement('p');
-                timestamp.innerHTML = data[i].created_at;
-                timestamp.className = 'notification-timestamp';
-
-                comment_body.appendChild(content_text);
-                comment_body.appendChild(timestamp);
-                modal_content.appendChild(comment_body);
-            }
-            
-            try {
-                var elements = document.getElementsByClassName('notification-box');
-                var target = elements[elements.length - 1];
-
-                var options = {
-                    root: null, // Use the viewport as the root
-                    rootMargin: '0px', // No margin around the viewport
-                    threshold: 0.5 // Trigger when at least half of the element is visible
-                };
-
-                // Callback function to execute when the element intersects
-                var callback = (entries, observer) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting & notification_pages_info.has_next) {
-                        // Element is visible
-                        observer.unobserve(entry.target);
-                        getUserNotifications(notification_pages_info.current + 1);
-                    }
-                });
-                };
-
-                // Create an intersection observer instance
-                var observer = new IntersectionObserver(callback, options);
-
-                // Start observing the target element
-                observer.observe(target);
-            }
-            catch (error) {
-                //pass
-            }
-
-
-        }
-        
-        function fetchUserInfo() {
-            let subscribe = document.getElementById('subscribe');
-            let avatar = document.getElementById('profile_options');
-            let base_name = document.getElementById('base_name');
-            let writer_name = document.getElementById('writer_name');
-            let reader_name = document.getElementById('reader_name');
-            let writer_status = document.getElementById('writer_button');
-            let writer_block = document.getElementById('writer_block');
-            let get_user_stories_link = document.getElementById('get_user_stories');
-            let get_subscr = document.getElementById('get_subscr');
-            let view_history = document.getElementById('view_history');
-            let view_liked = document.getElementById('view_liked');
-            let notifications = document.getElementById('notifications');
-
-            var userValue = sessionStorage.getItem('user');
-            var user = userValue !== null ? userValue : null;
-
-            if (user == null) {
-                var url = `http://127.0.0.1:8000/user/view_profile`
-
-                fetch(url, {
+                fetch(`${MAINURL}/notifications/get_notifications?user=${user.id}&page=${page}`, {
                     method: "GET",
                     headers:{
                         'Content-Type':'application/json',
                     },
                     })
                     .then(response => {
-                            return response.json()
+                        return response.json();
                     })
                     .then(response => {
-                        console.log(response);
-                        if (response.unauth) {
-                            try {
-                                console.log('wehere')
-                                var subsrc = document.getElementById('subscribe');
-                                subsrc.style.display = 'none';
-                            }
-                            catch (error){
-                                //pass
-                            }
-                        }
-                        else {
-                            sessionStorage.setItem('user', JSON.stringify(response.profile));
-                            avatar.src = response.profile.avatar
-                            base_name.textContent = response.profile.displayable_name;
-                            notifications.innerHTML = `Notifications`;
+                        notification_pages_info = response.data.page;
+                        CreateNotificationsBoxes(response.data.notifications);
+                    });
 
-                            if (!response.profile.bound_writer_profile) {
-                                writer_status.style.display = 'block';
-                                writer_name.textContent = `Writer`;
-                            }
-                            else {
-                                reader = response.profile.bound_writer_profile;
-                                writer_name.textContent = `Writer '${response.profile.bound_writer_profile.writer_pseudo}'`;
-                                writer_block.style.display = 'block';
-                                get_user_stories_link.href = `http://127.0.0.1:8000/get_writer_stories/${response.profile.bound_writer_profile.id}`;
-                            }
-                            if (!response.profile.bound_reader_profile) {
-                                reader_name.textContent = `Reader`;
-                            }
-                            else {
-                                reader_name.textContent = `Reader '${response.profile.bound_user.username}'`;
-                                get_subscr.href = `http://127.0.0.1:8000/user/subscriptions?reader=${response.profile.bound_reader_profile.reader_id}`;
-                                view_history.href = `http://127.0.0.1:8000/get_viewed?reader=${response.profile.bound_reader_profile.reader_id}`;
-                                view_liked.href = `http://127.0.0.1:8000/get_liked?reader=${response.profile.bound_reader_profile.reader_id}`;
-                            }
-                        }
-                })
+                
             }
-            else {
-                user = JSON.parse(user);
-                avatar.src = user.avatar;
-                base_name.textContent = user.displayable_name;
-                notifications.innerHTML = `Notifications`;
 
-                if (!user.bound_writer_profile) {
-                    writer_status.style.display = 'block';
-                    writer_name.textContent = `Writer`;
+            function CreateNotificationsBoxes(data) {
+                console.log(data);
+                var button = document.getElementById('notifications')
+                var modal_content = document.getElementById('notifications_window')
+                var token = document.getElementById('token')
+
+                for (let i = 0; i < data.length; i++){
+                    var comment_body = document.createElement("div");
+                    comment_body.className = "notification-box";
+
+                    if (data[i].admin) {
+                        var content_text = document.createElement("p");
+                        
+                        comment_body.addEventListener('click', function() {
+                            var links = document.getElementsByClassName('notification-link');
+                            var elementsArray = Array.from(links);
+
+                            if (elementsArray.every(link => event.target != link)) {
+                                var url = `${MAINURL}/story/${data[i].post_id}`;
+
+                                var fetch_url = `${MAINURL}/notifications/mark_as_read/`
+
+                                fetch(fetch_url, {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        "X-CSRFToken": token.value,
+                                    },
+                                    body: JSON.stringify({"note_id": data[i].id, "type": "ao"})
+
+                                }).then(response => {
+                                    window.location.replace(url);
+                                })
+                            }
+                        })
+
+                        content_text.innerHTML = data[i].message + ` Lasts Until: ${data[i].expiration_date}.`;
+                    }
+                    else if (data[i].story_commented) {
+                        comment_body.addEventListener('click', function() {
+                            var links = document.getElementsByClassName('notification-link');
+                            var elementsArray = Array.from(links);
+
+                            if (elementsArray.every(link => event.target != link)) {
+                                var url = `${MAINURL}/story/${data[i].post_id}`;
+                                let note = data[i].id;
+    
+                                var fetch_url = `${MAINURL}/notifications/mark_as_read/`
+
+                                fetch(fetch_url, {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        "X-CSRFToken": token.value,
+                                    },
+                                    body: JSON.stringify({"note_id": note, "type": "scom"})
+
+                                }).then(response => {
+                                    sessionStorage.setItem('notification_comment_data', JSON.stringify({
+                                        'comment': data[i].comment_id,
+                                        'comment_type': 'main',
+                                        'parent': null,
+                                    }))
+                                    window.location.replace(url);   
+                                })
+                                
+                            }
+                        })
+
+                        var content_text = document.createElement("p");
+                        content_text.innerHTML = `You received new commentary on your story '${data[i].post_title}' from user <a href="http:/127.0.0.1:8000/user/view_profile" class="notification-link">${data[i].comment_creator.name}</a>`;
+                    }
+                    else if (data[i].story){
+                        comment_body.addEventListener('click', function() {
+                            console.log(data[i]);
+                            var links = document.getElementsByClassName('notification-link');
+                            var elementsArray = Array.from(links);
+
+                            console.log(data[i].post_name);
+                            var url = `${MAINURL}/story/${data[i].postId}`
+                            
+                            var fetch_url = `${MAINURL}/notifications/mark_as_read/`
+
+                            fetch(fetch_url, {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "X-CSRFToken": token.value,
+                                },
+                                body: JSON.stringify({"note_id": data[i].id, "type": "sc"})
+
+                            }).then(response => {
+                                window.location.replace(url);
+                            })
+
+                        })
+
+                        var content_text = document.createElement("p");
+                        content_text.innerHTML = `Author '${data[i].creator_username}' created new story '${data[i].post_name}'. Click this notification to check it out!`;
+                        
+                    }
+                    else if (data[i].comment) {
+                        comment_body.addEventListener('click', function() {
+                            var links = document.getElementsByClassName('notification-link');
+                            var elementsArray = Array.from(links);
+
+                            if (elementsArray.every(link => event.target != link)) {
+
+                                var url = `${MAINURL}/story/${data[i].post_id}`;
+
+                                var fetch_url = `${MAINURL}/notifications/mark_as_read/`
+
+                                fetch(fetch_url, {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        "X-CSRFToken": token.value,
+                                    },
+                                    body: JSON.stringify({"note_id": data[i].id, "type": "cr"})
+
+                                }).then(response => {
+                                    sessionStorage.setItem('notification_comment_data', JSON.stringify({
+                                        'comment': data[i].reply_id,
+                                        'comment_type': 'reply',
+                                        'parent': data[i].parent_comment_id
+                                    }))
+                                    window.location.replace(url);  
+                                })
+                                
+                            }
+                        })
+
+                        var content_text = document.createElement("p");
+                        content_text.innerHTML = `You received new reply on your commentary on Story '${data[i].post_title}' from User <a href="${MAINURL}/user/view_profile" class="notification-link">${data[i].creator.name}</a>`;
+                    }
+                    
+                    var timestamp = document.createElement('p');
+                    timestamp.innerHTML = data[i].created_at;
+                    timestamp.className = 'notification-timestamp';
+
+                    comment_body.appendChild(content_text);
+                    comment_body.appendChild(timestamp);
+                    modal_content.appendChild(comment_body);
+                }
+                
+                try {
+                    var elements = document.getElementsByClassName('notification-box');
+                    var target = elements[elements.length - 1];
+
+                    var options = {
+                        root: null, // Use the viewport as the root
+                        rootMargin: '0px', // No margin around the viewport
+                        threshold: 0.5 // Trigger when at least half of the element is visible
+                    };
+
+                    // Callback function to execute when the element intersects
+                    var callback = (entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting & notification_pages_info.has_next) {
+                            // Element is visible
+                            observer.unobserve(entry.target);
+                            getUserNotifications(notification_pages_info.current + 1);
+                        }
+                    });
+                    };
+
+                    // Create an intersection observer instance
+                    var observer = new IntersectionObserver(callback, options);
+
+                    // Start observing the target element
+                    observer.observe(target);
+                }
+                catch (error) {
+                    //pass
+                }
+
+
+            }
+            
+            function fetchUserInfo() {
+                let subscribe = document.getElementById('subscribe');
+                let avatar = document.getElementById('profile_options');
+                let base_name = document.getElementById('base_name');
+                let writer_name = document.getElementById('writer_name');
+                let reader_name = document.getElementById('reader_name');
+                let writer_status = document.getElementById('writer_button');
+                let writer_block = document.getElementById('writer_block');
+                let get_user_stories_link = document.getElementById('get_user_stories');
+                let get_subscr = document.getElementById('get_subscr');
+                let view_history = document.getElementById('view_history');
+                let view_liked = document.getElementById('view_liked');
+                let notifications = document.getElementById('notifications');
+                
+                
+
+                // console.log(typeof(if_user.value))
+                // var userValue = sessionStorage.getItem('user');
+                // var user = userValue !== null ? userValue : null;
+                // console.log("user:", userValue)
+
+                if (if_user.value == 'True') {
+                    var url = `${MAINURL}/user/view_profile`
+
+                    fetch(url, {
+                        method: "GET",
+                        headers:{
+                            'Content-Type':'application/json',
+                        },
+                        })
+                        .then(response => {
+                                return response.json()
+                        })
+                        .then(response => {
+                            console.log(response);
+                            if (response.unauth) {
+                                try {
+                                    // console.log('wehere')
+                                    var subsrc = document.getElementById('subscribe');
+                                    subsrc.style.display = 'none';
+                                }
+                                catch (error){
+                                    //pass
+                                }
+                            }
+                            else {
+                                sessionStorage.setItem('user', JSON.stringify(response.profile));
+                                avatar.src = response.profile.avatar
+                                // base_name.textContent = response.profile.displayable_name;
+                                notifications.innerHTML = `Notifications`;
+
+                                if (!response.profile.bound_writer_profile) {
+                                    writer_status.style.display = 'block';
+                                    writer_name.textContent = `Writer`;
+                                }
+                                else {
+                                    reader = response.profile.bound_writer_profile;
+                                    writer_name.textContent = `Writer '${response.profile.bound_writer_profile.writer_pseudo}'`;
+                                    writer_block.style.display = 'block';
+                                    get_user_stories_link.href = `${MAINURL}/get_writer_stories/${response.profile.bound_writer_profile.id}`;
+                                }
+                                if (!response.profile.bound_reader_profile) {
+                                    reader_name.textContent = `Reader`;
+                                }
+                                else {
+                                    reader_name.textContent = `Reader '${response.profile.bound_user.username}'`;
+                                    get_subscr.href = `${MAINURL}/user/subscriptions?reader=${response.profile.bound_reader_profile.reader_id}`;
+                                    view_history.href = `${MAINURL}/get_viewed?reader=${response.profile.bound_reader_profile.reader_id}`;
+                                    view_liked.href = `${MAINURL}/get_liked?reader=${response.profile.bound_reader_profile.reader_id}`;
+                                }
+                            }
+                    })
                 }
                 else {
-                    reader = user.bound_writer_profile;
-                    writer_name.textContent = `Writer '${user.bound_writer_profile.writer_pseudo}'`;
-                    writer_block.style.display = 'block';
-                    get_user_stories_link.href = `http://127.0.0.1:8000/get_writer_stories/${user.bound_writer_profile.id}`;
-                }
-                if (!user.bound_reader_profile) {
-                    reader_name.textContent = `Reader`;
-                }
-                else {
-                    reader_name.textContent = `Reader '${user.bound_user.username}'`;
-                    get_subscr.href = `http://127.0.0.1:8000/user/subscriptions?reader=${user.bound_reader_profile.reader_id}`;
-                    view_history.href = `http://127.0.0.1:8000/get_viewed?reader=${user.bound_reader_profile.reader_id}`;
-                    view_liked.href = `http://127.0.0.1:8000/get_liked?reader=${user.bound_reader_profile.reader_id}`;
+                    console.log(sessionStorage.getItem('user'));
+                    user = JSON.parse(sessionStorage.getItem('user'));
+                    avatar.src = user.avatar;
+                    // base_name.textContent = user.displayable_name;
+                    notifications.innerHTML = `Notifications`;
+
+                    if (!user.bound_writer_profile) {
+                        writer_status.style.display = 'block';
+                        writer_name.textContent = `Writer`;
+                    }
+                    else {
+                        reader = user.bound_writer_profile;
+                        writer_name.textContent = `Writer '${user.bound_writer_profile.writer_pseudo}'`;
+                        writer_block.style.display = 'block';
+                        get_user_stories_link.href = `${MAINURL}/get_writer_stories/${user.bound_writer_profile.id}`;
+                    }
+                    if (!user.bound_reader_profile) {
+                        reader_name.textContent = `Reader`;
+                    }
+                    else {
+                        reader_name.textContent = `Reader '${user.bound_user.username}'`;
+                        get_subscr.href = `${MAINURL}/user/subscriptions?reader=${user.bound_reader_profile.reader_id}`;
+                        view_history.href = `${MAINURL}/get_viewed?reader=${user.bound_reader_profile.reader_id}`;
+                        view_liked.href = `${MAINURL}/get_liked?reader=${user.bound_reader_profile.reader_id}`;
+                    }
                 }
             }
         }
+       
 
         function buildModal(text) {
             var modal = document.getElementById("modal_popup");

@@ -25,8 +25,9 @@ class Comment(models.Model):
                 'dislikes_count':self.dislikes_count,
                 'comment_body': self.comment_body,
                 'created_at': self.whenAdded(),
-                'creator': self.creator.displayable_name,
+                'creator': self.creator.user.username,
                 'creator_id': self.creator.id,
+                'is_writer': True if self.creator.writer is not None else False
             }
         
     def serialize_update(self):
@@ -45,7 +46,7 @@ class Comment(models.Model):
         days = floor(hours / 24)
         years = floor(days / 365)
         
-        return f'{years} years ago' if years > 0 else f'{days} days ago' if days > 0 else f'{hours} hours ago' if hours > 0 else f'{minutes} minutes ago'
+        return f'{years} year(s) ago' if years > 0 else f'{days} day(s) ago' if days > 0 else f'{hours} hour(s) ago' if hours > 0 else f'{minutes} minute(s) ago'
 
 
 @receiver(post_save, sender=Comment)

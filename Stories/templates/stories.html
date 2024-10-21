@@ -254,6 +254,7 @@
         </div>
 
         <script>
+            const MAINURL = 'http://127.0.0.1:8000';
             window.addEventListener('DOMContentLoaded', getPage());
             window.addEventListener('DOMContentLoaded', getGenres());
             window.addEventListener('DOMContentLoaded', getTags());
@@ -282,10 +283,10 @@
                 var search_prompt = searchfieldIneed.value || "";
 
                 if (tag == null) {
-                    var url = `http://127.0.0.1:8000/getStoryPage?search_type=${search_type}&search_prompt=${search_prompt}&sort_by=${sorting_order}&page=${page}&genres=${final_genres}`;
+                    var url = `${MAINURL}/getStoryPage?search_type=${search_type}&search_prompt=${search_prompt}&sort_by=${sorting_order}&page=${page}&genres=${final_genres}`;
                 }
                 else {
-                    var url = `http://127.0.0.1:8000/getStoryPage?search_type=${search_type}&search_prompt=${search_prompt}&sort_by=${sorting_order}&page=${page}&genres=${final_genres}&tag=${tag}`;
+                    var url = `${MAINURL}/getStoryPage?search_type=${search_type}&search_prompt=${search_prompt}&sort_by=${sorting_order}&page=${page}&genres=${final_genres}&tag=${tag}`;
                 }
                 fetch(url, {
                         method: "GET",
@@ -374,14 +375,14 @@
                     comment_box.addEventListener('click', function(event, info=data[i]) {
                         if (user){
                             if (user.bound_writer_profile) {
-                                window.location.href = `http://127.0.0.1:8000/story/${info.id}?reader=${user.bound_reader_profile.reader_id}&creator=${user.bound_writer_profile.id}`;
+                                window.location.href = `${MAINURL}/story/${info.id}?reader=${user.bound_reader_profile.reader_id}&creator=${user.bound_writer_profile.id}`;
                             }
                             else {
-                                window.location.href = `http://127.0.0.1:8000/story/${info.id}?reader=${user.bound_reader_profile.reader_id}`;
+                                window.location.href = `${MAINURL}/story/${info.id}?reader=${user.bound_reader_profile.reader_id}`;
                             }
                         }
                         else {
-                            window.location.href = `http://127.0.0.1:8000/story/${info.id}`;
+                            window.location.href = `${MAINURL}/story/${info.id}`;
                         }
                     })
 
@@ -423,7 +424,7 @@
             }
             
             function getGenres() {
-                var url = `http://127.0.0.1:8000/get_genres`
+                var url = `${MAINURL}/get_genres`
 
                 fetch(url, {
                     method: "GET",
@@ -435,7 +436,7 @@
                             return response.json()
                     })
                     .then(response => {
-                        console.log(response)
+                        // console.log(response)
                         CreateGenresBoxes(response);
                     });
             }
@@ -477,7 +478,7 @@
             }
         
             function getTags() {
-            var url = `http://127.0.0.1:8000/get_tags`
+            var url = `${MAINURL}/get_tags`
 
             fetch(url, {
                 method: "GET",

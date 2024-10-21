@@ -58,7 +58,7 @@
         <div class="story-content-wrapper" style="display: flex; flex-direction: column; align-items: top; justify-content: center; width: 50vw; margin: auto;">
             <div class="story-info-header-wrapper" style="display: flex; flex-direction: column;">
                 <h1 style="font-size: 50px; font-family: Verdana, Geneva, Tahoma, sans-serif; margin-bottom: 0;" id="story_title"></h1>
-                <h3 style="font-size: 25px;" >by <a href="https://example.com" id="author_profile"></a></h3>
+                <h3 style="font-size: 25px;" >by <a href="" id="author_profile"></a></h3>
                 <p id="date_field"></p>
                 <div class="interactions-buttons-wrapper">
                     <button style="width: max-content; display: none; margin-top: 2em;" id="subscribe"></button>
@@ -123,7 +123,7 @@
             </form>
         </div>    
 
-        <div class="reply-reply-form-wrapper" style="display: none; justify-content: left; align-items: center;">
+        <div class="reply-reply-form-wrapper" style="display: none; justify-content: left; align-items: center; margin-top: 0.5em; margin-bottom: 1em;">
             <form method="post" action="http://127.0.0.1:8000/comments/comments" style="display: flex; flex-direction: column; width: 100%; justify-content: left; align-items: center; height: 6em; margin-top: 2vh; flex-direction: column;">
                 {% csrf_token %}
                 <input placeholder="Here goes your reply body" name='comment_body' style="width: 100%; height: 5em; border: none; border-bottom: solid 1px grey;" onkeydown="handleKeyDown(event)"">
@@ -137,6 +137,7 @@
         </div>    
 
         <script>
+            const MAINURL = 'http://127.0.0.1:8000';
             window.addEventListener('DOMContentLoaded', fetchStory());
             var subscribe = document.getElementById('subscribe');
             var get_notif = document.getElementById('get_notified');
@@ -160,7 +161,7 @@
                 var likes_cnt = document.getElementById('like_story');
                 var dislikes_cnt = document.getElementById('dislike_story');
                 var author_id = document.getElementById('author_id');
-                var url = `http://127.0.0.1:8000/get_distinct_story?story=${story_id.value}`;
+                var url = `${MAINURL}/get_distinct_story?story=${story_id.value}`;
 
                 fetch(url, {
                     method: "GET",
@@ -197,10 +198,10 @@
 
                     story_title.textContent = cleaned_data.story.title;
                     author_id.value = cleaned_data.story.creator.id;
-                    author_profile.href = `http://example.com`;
+                    author_profile.href = `${MAINURL}/user/view_profile?user=${cleaned_data.story.creator.id}`;
                     author_profile.innerHTML = `${cleaned_data.story.creator.writer_pseudo}`;
 
-                    datefield.textContent = `Published ${cleaned_data.story.created_at}`;
+                    datefield.textContent = `Published ${cleaned_data.story.created_at} and ${cleaned_data.story.views_counter} people read this`;
                     comment_cnt.textContent = `${cleaned_data.story.comments_count} Comments`;
                     story_body.textContent = cleaned_data.story.body;
                     likes_cnt.innerHTML = `Likes: ${cleaned_data.story.likes_count}`;
@@ -214,7 +215,7 @@
                     subscribe.disabled = 'true';
                     var author = document.getElementById('author_id');
 
-                    var url = `http://127.0.0.1:8000/user/subscribe_to`;
+                    var url = `${MAINURL}/user/subscribe_to`;
 
                     fetch(url, {
                         method: "POST",
@@ -245,7 +246,7 @@
                     get_notif.disabled = true;
                     var author = document.getElementById('author_id');
 
-                    var url = `http://127.0.0.1:8000/user/note_unnote`;
+                    var url = `${MAINURL}/user/note_unnote`;
 
                     fetch(url, {
                         method: "POST",
@@ -293,7 +294,7 @@
             replies_pages_info = null;
                 
             function LikeDislikeComment(comment_id, type, index, ctype = 'comment') {
-                let url = `http://127.0.0.1:8000/comments/likeunlike`
+                let url = `${MAINURL}/comments/likeunlike`
                 let token = document.getElementById('token');
                 
                 if (user_information) {
@@ -344,12 +345,14 @@
                     replies[k].style.display = "none";
                 }
                 
-    
+                var true_style = window.getComputedStyle(form_to_choose[k], null).display;
+
                 for (let i = 0; i < form_to_choose.length; i++) {
                     form_to_choose[i].style.display = "none";
                 }
 
-                if (form_to_choose[k].style.display == "none"){
+
+                if (true_style == "none" || true_style == null){
                     form_to_choose[k].style.display = "flex";
                 } 
                 else {
@@ -388,7 +391,7 @@
     
             function fetchReplies(comment_id, j, page) {
     
-                fetch(`http://127.0.0.1:8000/comments/replies?parent=${comment_id}&page=${page}`, {
+                fetch(`${MAINURL}/comments/replies?parent=${comment_id}&page=${page}`, {
                     method:'GET',
                     headers:{
                         'Content-Type':'application/json',
@@ -422,7 +425,12 @@
                     comment_body.style.textAlign = "left";
         
                     var comment_creator = document.createElement("h3");
-                    comment_creator.innerHTML = `by <a href="http://127.0.0.1:8000/user/view_profile">${data[i].creator}</a>    ${data[i].created_at}`;
+                    if (data[i].is_writer){
+                        comment_creator.innerHTML = `by <a href="${MAINURL}/user/view_profile?user=${data[i].creator_id}">${data[i].creator}</a>    ${data[i].created_at}`;
+                    } else {
+                        comment_creator.innerHTML = `by ${data[i].creator}`;
+                    }
+
                     comment_creator.className = 'comment-creator-title';
         
                     var comment_text = document.createElement("p");
@@ -468,7 +476,7 @@
                     
                     var form_wrapper = forms_replies[forms_replies.length - 1].cloneNode(true);
                     form_to_modify = form_wrapper.getElementsByTagName('form');
-                    form_to_modify[0].action = 'http://127.0.0.1:8000/comments/replies';
+                    form_to_modify[0].action = '${MAINURL}/comments/replies';
                     parent_id_field = form_to_modify[0].getElementsByTagName('input');
                     
                     for (let g = 0; g < parent_id_field.length; g++){
@@ -544,7 +552,7 @@
                 }
 
                 var story_id = document.getElementById('story_id');
-                var url = `http://127.0.0.1:8000/comments/comments?page=${page}&story_id=${story_id.value}`;
+                var url = `${MAINURL}/comments/comments?page=${page}&story_id=${story_id.value}`;
     
                 fetch(url, {
                 method: "GET",
@@ -568,6 +576,7 @@
                 for (let j = 0; j < data.length; j++) {
                     var comment_box = document.createElement('div');
                     comment_box.className = 'comment-box';
+                    console.log(data[j])
     
                     if (data[j].id == highlight_id){
                         comment_box.style.backgroundColor = 'lightsalmon';
@@ -577,11 +586,11 @@
                     var user_Link = document.createElement('h3');
                     user_Link.className = 'comment-creator-title';
     
-                    if (data[j].creator_id){
-                        user_Link.innerHTML = `by <a href="http://127.0.0.1:8000/user/view_profile">${data[j].creator}</a>    ${data[j].created_at}`;
+                    if (data[j].is_writer){
+                        user_Link.innerHTML = `by <a href="${MAINURL}/user/view_profile?user=${data[j].creator_id}">${data[j].creator}</a>    ${data[j].created_at}`;
                     }
                     else {
-                        user_Link.textContent = 'Anonymous User';
+                        user_Link.innerHTML = `by${data[j].creator}`;
                     }
     
                     var comment_body = document.createElement('p');
@@ -644,7 +653,7 @@
                     
                     var form_wrapper = forms_comments[forms_comments.length - 1].cloneNode(true);
                     form_to_modify = form_wrapper.getElementsByTagName('form');
-                    form_to_modify[0].action = 'http://127.0.0.1:8000/comments/replies';
+                    form_to_modify[0].action = '${MAINURL}/comments/replies';
                     parent_id_field = form_to_modify[0].getElementsByTagName('input');
                     
                     for (let i =0; i < parent_id_field.length; i++){
@@ -726,7 +735,7 @@
                 var likes = document.getElementById('like_story');
                 var dislikes = document.getElementById('dislike_story');
 
-                var url = `http://127.0.0.1:8000/react_story`;
+                var url = `${MAINURL}/react_story`;
                 
                 if (user_reader) {
                     fetch(url, {
@@ -742,11 +751,15 @@
                         if (response.success) {
                             likes.innerHTML = `Likes: ${response.reactions.likes}`;
                             dislikes.innerHTML = `Dislikes: ${response.reactions.dislikes}`;
+                        } else {
+                            likes.innerHTML = `Likes: ${response.reactions.likes}`;
+                            dislikes.innerHTML = `Dislikes: ${response.reactions.dislikes}`;
+                            buildModal(response.reason);
                         }
                     })
                     return
                 } else {
-                    buildModal("You must log in in order to like stories")
+                    buildModal("You must log in in order to like stories");
                 }
             }
         </script>

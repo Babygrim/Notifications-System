@@ -105,6 +105,7 @@
     </div>
 
     <script>
+        const MAINURL = 'http://127.0.0.1:8000';
         var genres_box = document.getElementById('checkboxes');
         var tags_box = document.getElementById('tags_recommendation');
         var tag_Input = document.getElementById('tagholder');
@@ -114,7 +115,7 @@
         window.addEventListener('DOMContentLoaded', getTags());
 
         function getGenres() {
-            var url = `http://127.0.0.1:8000/get_genres`
+            var url = `${MAINURL}/get_genres`
 
             fetch(url, {
                 method: "GET",
@@ -180,7 +181,7 @@
         })
 
         function getTags() {
-            var url = `http://127.0.0.1:8000/get_tags`
+            var url = `${MAINURL}/get_tags`
 
             fetch(url, {
                 method: "GET",

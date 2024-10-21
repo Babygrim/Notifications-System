@@ -73,7 +73,16 @@ class BaseUserProfile(models.Model):
             'bound_reader_profile': self.reader.serialize_load() if self.reader else None,
             'bound_writer_profile': self.writer.serialize_load() if self.writer else None,
         }
-        
+    
+    def serialize_for_others(self):
+        return {
+            'avatar': self.avatar.url,
+            'displayable_name': self.displayable_name,
+            'premium': self.is_premium,
+            'bound_writer_profile': self.writer.serialize_load()
+        }
+    
+    
     def serialize_notif(self):
         return {
             'user_id': self.id,

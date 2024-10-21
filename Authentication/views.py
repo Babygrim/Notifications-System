@@ -28,23 +28,36 @@ def user_login(request):
             if user:
                 login(request, user)
                 return redirect('stories')
+    elif request.user.is_authenticated:
+        return redirect('stories')
     else:
         form = LoginForm()
-    return render(request, 'login.html', {'form': form})
+        return render(request, 'login.html', {'form': form})
 
 # logout page
 def user_logout(request):
+    referer = request.META.get('HTTP_REFERER')
     logout(request)
-    return redirect('stories')
+    if referer:
+        return redirect(referer)
+    else:
+        return redirect('stories')
 
 
 def viewProfile(request):
     if request.method == "GET":
-        if request.user.id:
-            profile = BaseUserProfile.objects.get(user = request.user)
+        user = request.GET.get('user', -1)
         
-            return JsonResponse({'profile': profile.serialize()})
-        return JsonResponse({'unauth':True})
+        if request.user.is_authenticated and user == -1:
+            profile = BaseUserProfile.objects.get(user__id = request.user.id)
+            
+            return JsonResponse({'success': True, 'profile': profile.serialize()})
+        else:
+            profile = BaseUserProfile.objects.get(user__id = int(user))
+            
+            return JsonResponse({'success': True, 'profile': profile.serialize_for_others()})
+            
+        
        
 def becomeWriter(request):
     if request.method == "GET":
