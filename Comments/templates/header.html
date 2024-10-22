@@ -287,10 +287,15 @@
         <div class="profile-dropdown-wrapper" id="clickable_profile_zone"  style="display: flex; width: 100%; height: 30rem; background-color: rgba(0, 0, 0, 0.2); justify-content: right; background: transparent; position: absolute; pointer-events: none; margin-top: 60vh;">
             <div id="profile_dropdown_options" style="display: none; width: 15rem; height: min-content; background-color: lightgoldenrodyellow; border-radius: 10px 10px 10px 10px; z-index: 999; pointer-events: auto; margin-right: 1em; flex-direction: column;">
                 
-                <!-- <div class="heading-baseuser-wrapper" style="width: 100%; height: 10%;  border-bottom: 1px solid rgba(0, 0, 0, 0.2);">
-                    <h3 style="font-family: Verdana, Geneva, Tahoma, sans-serif; margin-left: 0.4em; margin-top: 0.25em; margin-bottom: 0.25em; padding: 5px;" id="base_name"></h3>
-                </div> -->
-
+                {% if request.user.is_superuser %}
+                    <div class="profile-option" style="width: 100%; border-bottom: 1px solid rgba(0, 0, 0, 0.2);">
+                        <a href="http://127.0.0.1:8000/ainsgdgnaisdjgnadisngiadsngg820n0g78432n03478g/" style="display: flex; text-decoration: none; height: 100%;">
+                            <div class="profile-link">
+                                <h3>DB admin</h3>
+                            </div>
+                        </a>
+                    </div>
+                {% endif %}
                 
                 <div class="heading-reader-wrapper" style="width: 100%; height: 10%;  border-bottom: 1px solid rgba(0, 0, 0, 0.2);">
                     <h3 style="font-family: Verdana, Geneva, Tahoma, sans-serif; margin-left: 0.4em; margin-top: 0.25em; margin-bottom: 0.25em; padding: 5px; font-size: 0.9rem;" id="reader_name"></h3>
@@ -298,7 +303,7 @@
                 
                 <div class="profile-option" style="width: 100%;">
                     <a href="http://127.0.0.1:8000/user/view_profile" style="display: flex; text-decoration: none; height: 100%;">
-                        <div class="profile-link"">
+                        <div class="profile-link">
                             <h3>User Options</h3>
                         </div>
                     </a>

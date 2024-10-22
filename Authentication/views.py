@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, HttpResponseRedirect
-from django.contrib.auth import authenticate, login, logout 
+from django.contrib.auth import authenticate, login, logout
 from .forms import SignupForm, LoginForm
 from .models import *
 from django.http import JsonResponse
@@ -15,24 +15,27 @@ def user_signup(request):
             return redirect('login')
     else:
         form = SignupForm()
+        
     return render(request, 'signup.html', {'form': form})
 
 # login page
 def user_login(request):
     if request.method == 'POST':
-        form = LoginForm(request.POST)
+        form = LoginForm(request, request.POST)
         if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
-            user = authenticate(request, username=username, password=password)
+            user = form.get_user()
             if user:
                 login(request, user)
                 return redirect('stories')
+        
+        return render(request, 'login.html', {'form': form}) 
+    
     elif request.user.is_authenticated:
         return redirect('stories')
     else:
         form = LoginForm()
-        return render(request, 'login.html', {'form': form})
+    
+    return render(request, 'login.html', {'form': form})
 
 # logout page
 def user_logout(request):
