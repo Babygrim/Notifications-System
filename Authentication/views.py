@@ -21,19 +21,23 @@ def user_signup(request):
 # login page
 def user_login(request):
     if request.method == 'POST':
-        form = LoginForm(request, request.POST)
-        if form.is_valid():
-            user = form.get_user()
-            if user:
-                login(request, user)
-                return redirect('stories')
-        
+        if request.user.is_authenticated:
+            referer = request.META.get("HTTP_REFERRER")
+            return redirect(referer if referer else 'stories')
+        else:
+            form = LoginForm(request, request.POST)
+            if form.is_valid():
+                user = form.get_user()
+                if user:
+                    login(request, user)
+                    return redirect('stories')
+            
         return render(request, 'login.html', {'form': form}) 
-    
-    elif request.user.is_authenticated:
-        return redirect('stories')
     else:
-        form = LoginForm()
+        if request.user.is_authenticated:
+            return redirect('stories')
+        else:
+            form = LoginForm()
     
     return render(request, 'login.html', {'form': form})
 
@@ -41,10 +45,7 @@ def user_login(request):
 def user_logout(request):
     referer = request.META.get('HTTP_REFERER')
     logout(request)
-    if referer:
-        return redirect(referer)
-    else:
-        return redirect('stories')
+    return redirect(referer if referer else 'stories')
 
 
 def viewProfile(request):

@@ -101,10 +101,12 @@ def getGenres(request):
 
 def getTags(request):
     if request.method == "GET":
-        search = request.GET.get('search', None)
-        
+        search = request.GET.get('query', None)
+
         if search:
-            pass
+            tags = PostTags.objects.filter(title__icontains = search).annotate(popularity = Count('post')).order_by('popularity')[:6]
+            
+            return JsonResponse({"success": True, 'tags': [elem.serialize_create_story() for elem in tags]})
         else:
             tags = PostTags.objects.annotate(popularity = Count('post')).order_by('popularity')[:25]
             

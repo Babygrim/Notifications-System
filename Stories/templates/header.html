@@ -14,14 +14,11 @@
         color: rgba(0, 0, 0)
     }
 
-    body {
-        display: flex;
-        flex-direction: column;
+    body, html {
         width: inherit;
         height: inherit;
         margin: 0;
         padding: 0;
-        align-items: top;
     }
 
     .notification-timestamp {
@@ -70,6 +67,7 @@
 
     .profile-option h3 {
         font-size: 0.8rem; margin-left: 1em; margin-top: 1em;
+        color: brown;
     }
 
     .profile-option:hover {
@@ -241,6 +239,12 @@
         color: #000;
         text-decoration: none;
         cursor: pointer;
+    }
+
+    .footer {
+        height: 5rem;
+        display: flex;
+        background-color:rgb(250, 234, 214);
     }
 
 </style>
@@ -425,7 +429,7 @@
 
     {% endblock %}
 
-    <div class="footer" style="height: 5rem; position: relative; background-color: bisque;"></div>
+    <div class="footer"></div>
 
     <script>
         // const MAINURL = 'http://127.0.0.1:8000';

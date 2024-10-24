@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autocomplete Suggestion Box</title>
+    <style>
+        .autocomplete-suggestions {
+            border: 1px solid #ddd;
+            max-height: 150px;
+            overflow-y: auto;
+            background-color: white;
+            position: absolute;
+            z-index: 999;
+        }
+        
+        .autocomplete-suggestion {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .autocomplete-suggestion:hover {
+            background-color: #f1f1f1;
+        }
+
+        input {
+            width: 300px;
+            padding: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Autocomplete Input Field</h1>
+    <input type="text" id="searchInput" placeholder="Search...">
+    <div id="suggestionsBox" class="autocomplete-suggestions"></div>
+
+    <script>
+        const suggestions = ['Apple', 'Banana', 'Orange', 'Pineapple', 'Mango', 'Grape', 'Papaya'];
+
+        const inputField = document.getElementById('searchInput');
+        const suggestionsBox = document.getElementById('suggestionsBox');
+
+        inputField.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            suggestionsBox.innerHTML = ''; // Clear previous suggestions
+
+            if (query) {
+                const filteredSuggestions = suggestions.filter(item => item.toLowerCase().includes(query));
+                
+                filteredSuggestions.forEach(item => {
+                    const suggestionElement = document.createElement('div');
+                    suggestionElement.classList.add('autocomplete-suggestion');
+                    suggestionElement.textContent = item;
+                    
+                    suggestionElement.addEventListener('click', function() {
+                        inputField.value = item;
+                        suggestionsBox.innerHTML = ''; // Clear suggestions after selection
+                    });
+                    
+                    suggestionsBox.appendChild(suggestionElement);
+                });
+            }
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!inputField.contains(e.target) && !suggestionsBox.contains(e.target)) {
+                suggestionsBox.innerHTML = '';
+            }
+        });
+    </script>
+</body>
+</html>
