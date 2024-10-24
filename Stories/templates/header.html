@@ -226,6 +226,14 @@
         text-align: center;
     }
 
+    .modal-content-wrapper {
+        margin: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
     /* The Close Button */
     .close-modal {
         color: #aaaaaa;
@@ -247,6 +255,10 @@
         background-color:rgb(250, 234, 214);
     }
 
+    .modal-button {
+        width: 150px;
+        height: 40px;
+    }
 </style>
 
 <body>
@@ -392,7 +404,7 @@
                 </div>
 
                 <div class="profile-option" id="writer_button" style="width: 100%">
-                    <a href="http://127.0.0.1:8000/createStory" style="display: flex; text-decoration: none; height: 100%;" id="get_user_stories">
+                    <a href="http://127.0.0.1:8000/create_story" style="display: flex; text-decoration: none; height: 100%;" id="get_user_stories">
                         <div class="create-story-link">
                             <h3 style="font-size: 0.8rem; font-family: Verdana, Geneva, Tahoma, sans-serif; margin-left: 1em;" >Create Story</h3>
                         </div>
@@ -419,8 +431,11 @@
 
         <div id="modal_popup" class="modal">
             <div class="modal_popup-content">
-            <span class="close-modal">&times;</span>
-            <p class="modal-text"></p>
+                <span class="close-modal">&times;</span>
+                <div class="modal-content-wrapper">
+                    <p class="modal-text"></p>
+                    <button class="modal-button"></button>
+                </div>
             </div>
         </div>
     </div>
@@ -796,7 +811,7 @@
         }
        
 
-        function buildModal(text) {
+        function buildModal(text, button_text=null, button_action=null) {
             var modal = document.getElementById("modal_popup");
             modal.style.display = "block";
 
@@ -816,6 +831,33 @@
                 if (event.target == modal) {
                     modal.style.display = "none";
                 }
+            }
+            var button = modal.getElementsByClassName('modal-button')[0];
+            
+            if (button_text) {
+                button.style.display = "block";
+                button.textContent = button_text;
+                if (button_action) {
+                    button.onclick =  function() {
+                        window.location = button_action;
+                    }
+
+                    span.onclick =  function() {
+                        window.location = button_action;
+                    }
+
+                    window.onclick = function(event) {
+                        if (event.target == modal) {
+                            window.location = button_action;
+                        }
+                    }
+                } else {
+                    button.onclick = function() {
+                        modal.style.display = "none";
+                    }
+                }
+            } else {
+                button.style.display = "none";
             }
         }
     </script>

@@ -74,7 +74,6 @@
         }
 
         .story-description {
-            height: 100%;
             font-size: 0.7rem;
             margin-bottom: 0.5em;
             margin-top: 0.5em;
@@ -109,6 +108,17 @@
             justify-content: left;
             align-items: center;
             flex-wrap: wrap;
+        }
+
+        .story-tags-wrapper {
+            display: flex;
+            flex-direction: row;
+        }
+
+        .story-tag {
+            margin: 0;
+            margin-right: 5px;
+            font-size: 0.8em;
         }
 
         .searchbox-wrapper {
@@ -151,6 +161,7 @@
             background-color: lightsalmon;
             cursor: pointer;
         }
+
 
         .container-tags-wrapper {
             margin-top: 0.5rem;
@@ -283,10 +294,10 @@
                 var search_prompt = searchfieldIneed.value || "";
 
                 if (tag == null) {
-                    var url = `${MAINURL}/getStoryPage?search_type=${search_type}&search_prompt=${search_prompt}&sort_by=${sorting_order}&page=${page}&genres=${final_genres}`;
+                    var url = `${MAINURL}/get_story_page?search_type=${search_type}&search_prompt=${search_prompt}&sort_by=${sorting_order}&page=${page}&genres=${final_genres}`;
                 }
                 else {
-                    var url = `${MAINURL}/getStoryPage?search_type=${search_type}&search_prompt=${search_prompt}&sort_by=${sorting_order}&page=${page}&genres=${final_genres}&tag=${tag}`;
+                    var url = `${MAINURL}/get_story_page?search_type=${search_type}&search_prompt=${search_prompt}&sort_by=${sorting_order}&page=${page}&genres=${final_genres}&tag=${tag}`;
                 }
                 fetch(url, {
                         method: "GET",
@@ -351,6 +362,16 @@
                     genre.innerHTML = data[i].genre.genre;
                     genre.className = 'story-genre';
 
+                    var tags = document.createElement('div');
+                    tags.className = 'tags-wrapper';
+                    
+                    data[i].tags.forEach(tag => {
+                        let distinct_tag = document.createElement('p');
+                        distinct_tag.className = 'tag-wrapper';
+                        distinct_tag.innerHTML = '#' + tag.tag;
+                        tags.appendChild(distinct_tag); 
+                    })
+
                     story_title.appendChild(title);
                     story_title.appendChild(genre);
 
@@ -367,9 +388,11 @@
                     overall_container.appendChild(info_box_wrapper);
                     overall_container.appendChild(story_title);
                     overall_container.appendChild(description);
+                    overall_container.appendChild(tags);
 
                     comment_box.appendChild(story_image);
                     comment_box.appendChild(overall_container);
+                    // comment_box.appendChild(tags);
 
                     // MAKE GENRE CLICKABLE
                     comment_box.addEventListener('click', function(event, info=data[i]) {
@@ -502,7 +525,7 @@
                     tag_wrapper.className = 'tag-wrapper';
 
                     var create_input = document.createElement('p');
-                    create_input.textContent = data[i].tag;
+                    create_input.textContent = '#' + data[i].tag;
                     create_input.className = 'tag-holder';
 
                     var popularity = document.createElement('p');

@@ -476,7 +476,7 @@
                     
                     var form_wrapper = forms_replies[forms_replies.length - 1].cloneNode(true);
                     form_to_modify = form_wrapper.getElementsByTagName('form');
-                    form_to_modify[0].action = '${MAINURL}/comments/replies';
+                    form_to_modify[0].action = `${MAINURL}/comments/replies`;
                     parent_id_field = form_to_modify[0].getElementsByTagName('input');
                     
                     for (let g = 0; g < parent_id_field.length; g++){
@@ -653,7 +653,7 @@
                     
                     var form_wrapper = forms_comments[forms_comments.length - 1].cloneNode(true);
                     form_to_modify = form_wrapper.getElementsByTagName('form');
-                    form_to_modify[0].action = '${MAINURL}/comments/replies';
+                    form_to_modify[0].action = `${MAINURL}/comments/replies`;
                     parent_id_field = form_to_modify[0].getElementsByTagName('input');
                     
                     for (let i =0; i < parent_id_field.length; i++){

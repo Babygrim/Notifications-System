@@ -20,78 +20,101 @@ def getSingleStory(request, id):
         return render(request, "single-story.html", {"context": id})
     
 def getStoryPage(request):
-    req_page = int(request.GET.get('page', 1))
-    search_prompt = request.GET.get('search_prompt', None)
-    genres = request.GET.get('genres', None)
-    tags = request.GET.get('tag', None)
-    sort_by = request.GET.get('sort_by', None)
-    filter_conditions = []
-    
-    if not sort_by:
-        sort_by = 'likes_count'
-    
-    if genres:
-        genres_ids = list(map(int, genres.split(',')))
-        genre_condition = Q(genre__id__in = genres_ids)
-        filter_conditions.append(genre_condition)
-
-    if tags:
-        genres_ids = list(map(int, tags.split(',')))
-        tag_condition = Q(tags__id__in = genres_ids)
-        filter_conditions.append(tag_condition)
-
-    if search_prompt:
-        search_condition = tokenizeSearch(search_prompt)
+    if request.method == "GET":
+        req_page = int(request.GET.get('page', 1))
+        search_prompt = request.GET.get('search_prompt', None)
+        genres = request.GET.get('genres', None)
+        tags = request.GET.get('tag', None)
+        sort_by = request.GET.get('sort_by', None)
+        filter_conditions = []
         
-        case_list = []
-        for key in search_condition.keys():
-            case_list.append(
-                Case(
-                    When(key, then=search_condition[key]), 
-                    default=0, 
-                    output_field=IntegerField())
-            )
-        stories = Post.objects.annotate(num_matches=sum(case_list)).order_by('-num_matches')[:100]
-        # matches_median = median(stories.values_list('num_matches', flat=True))
+        if not sort_by:
+            sort_by = 'likes_count'
         
-        # stories = stories.filter(*filter_conditions, num_matches__gt = matches_median).order_by(sort_by)[:100]
-    else:
-        stories = Post.objects.filter(*filter_conditions).order_by(sort_by)[:100]
-    
-    paginated_stories = Paginator(stories, per_page=10)
-    get_page = paginated_stories.get_page(req_page)
-    
-    payload = [elem.serializer_all() for elem in get_page.object_list]
+        if genres:
+            genres_ids = list(map(int, genres.split(',')))
+            genre_condition = Q(genre__id__in = genres_ids)
+            filter_conditions.append(genre_condition)
 
-    response = {
-            "page": {
-                "current": get_page.number,
-                "has_next": get_page.has_next(),
-                "has_previous": get_page.has_previous(),
-                "overall": paginated_stories.num_pages,
-            },
-            "stories": payload,
-    }
-    
-    return JsonResponse({"data": response})
+        if tags:
+            genres_ids = list(map(int, tags.split(',')))
+            tag_condition = Q(tags__id__in = genres_ids)
+            filter_conditions.append(tag_condition)
+
+        if search_prompt:
+            search_condition = tokenizeSearch(search_prompt)
+            
+            case_list = []
+            for key in search_condition.keys():
+                case_list.append(
+                    Case(
+                        When(key, then=search_condition[key]), 
+                        default=0, 
+                        output_field=IntegerField())
+                )
+            stories = Post.objects.annotate(num_matches=sum(case_list)).order_by('-num_matches')[:100]
+            # matches_median = median(stories.values_list('num_matches', flat=True))
+            
+            # stories = stories.filter(*filter_conditions, num_matches__gt = matches_median).order_by(sort_by)[:100]
+        else:
+            stories = Post.objects.filter(*filter_conditions).order_by(sort_by)[:100]
+        
+        paginated_stories = Paginator(stories, per_page=10)
+        get_page = paginated_stories.get_page(req_page)
+        
+        payload = [elem.serializer_all() for elem in get_page.object_list]
+
+        response = {
+                "page": {
+                    "current": get_page.number,
+                    "has_next": get_page.has_next(),
+                    "has_previous": get_page.has_previous(),
+                    "overall": paginated_stories.num_pages,
+                },
+                "stories": payload,
+        }
+        
+        return JsonResponse({"data": response})
 
 def createStory(request):
     if request.method == "GET":
         return render(request, 'create-story.html')
     
     elif request.method == "POST":
-        data = request.POST
-        genres = data.get('genre')
-        descr = data.get('description', None)
+        data = json.loads(request.body)
+        title = data.get('title', None) # mandatory
+        main_text =  data.get('body', None) # mandatory
+        genre = data.get('genre', None) # mandatory
+        #image = data.get('image', None) # optional
+        descr = data.get('description', None) # optional
+        tags = data.get('tag_names', None) # optional
         user = BaseUserProfile.objects.get(user = request.user)
         
-        if len(descr) > 0:
-            create_story = Post(creator_id = user.writer, post_description=descr, post_title = data.get('title', "Story Title Lost"), post_text = data.get('body', 'Story Text Lost'), genre=PostGenre.objects.get(pk=int(genres)))
+        if title and main_text and genre:
+            create_story = Post(creator_id = user.writer, post_title = title, post_text = main_text, genre=PostGenre.objects.get(pk=int(genre)))
+            create_story.save()
+            
+            if descr:
+                create_story.post_description = descr
+                create_story.save()
+            
+            if tags:
+                for tag_name in tags.split(','):
+                    if len(tag_name) > 0:
+                        try:
+                            get_tag = PostTags.objects.get(title = tag_name)
+                            create_story.tags.add(get_tag)
+                        except PostTags.DoesNotExist:
+                            get_tag = PostTags(title = tag_name)
+                            get_tag.save()
+                            create_story.tags.add(get_tag)
+                        finally:
+                            create_story.save()
+                        
         else:
-            create_story = Post(creator_id = user.writer, post_title = data.get('title', "Story Title Lost"), post_text = data.get('body', 'Story Text Lost'), genre=PostGenre.objects.get(pk=int(genres)))
-        create_story.save()
+            return JsonResponse({"success": False, "message":"Story missing it's required attribute(s)"})
         
-        return HttpResponseRedirect('/')
+        return JsonResponse({"success": True, "message":"Story created successfully"})
     
 def getGenres(request):
     if request.method == "GET":
@@ -104,11 +127,11 @@ def getTags(request):
         search = request.GET.get('query', None)
 
         if search:
-            tags = PostTags.objects.filter(title__icontains = search).annotate(popularity = Count('post')).order_by('popularity')[:6]
+            tags = PostTags.objects.filter(title__icontains = search).annotate(popularity = Count('post')).order_by('-popularity')[:5]
             
             return JsonResponse({"success": True, 'tags': [elem.serialize_create_story() for elem in tags]})
         else:
-            tags = PostTags.objects.annotate(popularity = Count('post')).order_by('popularity')[:25]
+            tags = PostTags.objects.annotate(popularity = Count('post')).order_by('-popularity')[:10]
             
             return JsonResponse({"success": True, 'tags': [elem.serialize_create_story() for elem in tags]})
          

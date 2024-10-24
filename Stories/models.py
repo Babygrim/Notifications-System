@@ -74,6 +74,7 @@ class Post(models.Model):
             "description": self.post_description,
             'created_at': self.whenAdded(),
             'genre': self.genre.serializer(),
+            'tags': [tag.serializer() for tag in self.tags.all()],
             'views_counter': self.views_counter,
         }
         
