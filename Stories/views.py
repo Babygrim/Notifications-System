@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from .models import *
-from django.db.models import Count, Case, When, IntegerField
+from django.db.models import Count, Case, When, IntegerField, Sum
 from django.http import HttpResponseRedirect
 from django.http import JsonResponse
 from django.core.paginator import Paginator
@@ -24,8 +24,8 @@ def getStoryPage(request):
         req_page = int(request.GET.get('page', 1))
         search_prompt = request.GET.get('search_prompt', None)
         genres = request.GET.get('genres', None)
-        tags = request.GET.get('tag', None)
-        sort_by = request.GET.get('sort_by', None)
+        tags = request.GET.get('tags', None)
+        sort_by = request.GET.get('sort_by', '-likes_count')
         filter_conditions = []
         
         if not sort_by:
@@ -37,25 +37,31 @@ def getStoryPage(request):
             filter_conditions.append(genre_condition)
 
         if tags:
-            genres_ids = list(map(int, tags.split(',')))
-            tag_condition = Q(tags__id__in = genres_ids)
-            filter_conditions.append(tag_condition)
+            try:
+                tag_ids = list(map(int, tags.split(',')))
+                tags_condition = Q(tags__id__in = tag_ids)
+                filter_conditions.append(tags_condition)
+            except ValueError:
+                pass
+                
 
         if search_prompt:
             search_condition = tokenizeSearch(search_prompt)
             
-            case_list = []
-            for key in search_condition.keys():
-                case_list.append(
-                    Case(
-                        When(key, then=search_condition[key]), 
-                        default=0, 
-                        output_field=IntegerField())
-                )
-            stories = Post.objects.annotate(num_matches=sum(case_list)).order_by('-num_matches')[:100]
+            case_list = [
+                Case(
+                    When(key, then=search_condition[key]), 
+                    default=0, 
+                    output_field=IntegerField())
+                
+                for key in search_condition.keys()
+            ]
+            
+            stories = Post.objects.filter(*filter_conditions).distinct()
+            stories = stories.annotate(num_matches=sum(case_list)).order_by('-num_matches')[:100]
             # matches_median = median(stories.values_list('num_matches', flat=True))
             
-            # stories = stories.filter(*filter_conditions, num_matches__gt = matches_median).order_by(sort_by)[:100]
+            # stories = stories.filter(*filter_conditions).order_by(sort_by)[:100]
         else:
             stories = Post.objects.filter(*filter_conditions).order_by(sort_by)[:100]
         

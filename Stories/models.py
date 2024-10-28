@@ -99,9 +99,10 @@ class Post(models.Model):
         minutes = floor(time_difference.total_seconds() / 60)
         hours = floor(minutes / 60)
         days = floor(hours / 24)
+        months = floor(days / 30)
         years = floor(days / 365)
         
-        return f'{years} years ago' if years > 0 else f'{days} days ago' if days > 0 else f'{hours} hours ago' if hours > 0 else f'{minutes} minutes ago'
+        return f'{years} year(s) ago' if years > 0 else f'{months} month(s) ago' if months > 0 else f'{days} day(s) ago' if days > 0 else f'{hours} hour(s) ago' if hours > 0 else f'{minutes} minute(s) ago' if minutes > 0 else "Recently published"
         
     def serializer_single(self):
         return {

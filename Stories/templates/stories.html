@@ -25,8 +25,6 @@
             box-shadow: 0px 0px 5px 0px rgba(0, 0, 0);
         }
 
-
-
         .story-text-wrapper {
             padding: 10px;
             overflow: hidden;
@@ -113,12 +111,19 @@
         .story-tags-wrapper {
             display: flex;
             flex-direction: row;
+            
         }
 
-        .story-tag {
+        .story-tag-wrapper {
+            transition: color 0.3s;
             margin: 0;
             margin-right: 5px;
             font-size: 0.8em;
+        }
+
+        .story-tag-wrapper:hover {
+            color: brown;
+            transition: color 0.3s;
         }
 
         .searchbox-wrapper {
@@ -145,6 +150,7 @@
             flex-direction: row;
             flex-wrap: wrap;
         } 
+
         .tag-wrapper {
             font-size: 0.7rem;
             display: flex;
@@ -159,6 +165,39 @@
 
         .tag-wrapper:hover {
             background-color: lightsalmon;
+            cursor: pointer;
+        }
+
+        .selected-tags {
+            display: flex; 
+            justify-content: left; 
+            flex-direction: row; 
+            margin-left: 10px;
+            align-items: center;
+        }
+
+        .selected-tag-wrapper {
+            display: flex;
+            flex-direction: row;
+            background-color: lightblue;
+            align-items: center;
+            border-radius: 5px;
+            padding: 5px;
+            margin: 5px;
+        }
+
+        .selected-tag-wrapper p{
+            font-size: 0.7rem;
+            margin: 0;
+            margin-right: 5px;
+            padding: 0;
+        }
+        .selected-tag-wrapper span {
+            margin: 0;
+            padding: 0;
+        }
+
+        .selected-tag-wrapper span:hover {
             cursor: pointer;
         }
 
@@ -251,13 +290,18 @@
 
                 </div>
 
-                <div class="stories-wrapper" style="display: flex; width: 80%; flex-direction: column; justify-content: center; margin-left: 1.5rem; ">
-                    <div class="searchbox-wrapper" style="padding: 10px;">
-                        <input placeholder="Search by #tag, genre or story name" class="search-field" id="search_name_author_tag" value="">
+                <div class="stories-wrapper" style="display: flex; width: 80%; flex-direction: column; justify-content: flex-start; margin-left: 1.5rem; ">
+                    <div class="searchbox-wrapper" style="padding: 10px; display: flex; justify-content: left; flex-direction: row;">
+                        <input placeholder="Search story..." class="search-field" id="search_name_author_tag" value="">
                         <button class="search-button">Search</button>
+
+
+                        <div class="selected-tags" id='selected-tags'>
+                            <p>Tags filter: </p>
+                        </div>
                     </div>
 
-                    <div class="stories-boxes-wrapper" id="stories_boxes" style="display: flex; width: 100%; flex-direction: row; flex-wrap: wrap; margin: auto; justify-content: flex-start; ">
+                    <div class="stories-boxes-wrapper" id="stories_boxes" style="display: flex; width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: flex-start; ">
                         
                     </div>
                 </div>
@@ -266,9 +310,9 @@
 
         <script>
             const MAINURL = 'http://127.0.0.1:8000';
-            window.addEventListener('DOMContentLoaded', getPage());
-            window.addEventListener('DOMContentLoaded', getGenres());
-            window.addEventListener('DOMContentLoaded', getTags());
+            window.addEventListener('load', getPage());
+            window.addEventListener('load', getGenres());
+            window.addEventListener('load', getTags());
             var stories_page_info = null;
             var searchfieldIneed = document.getElementById('search_name_author_tag');
             var sorting_boxes = document.getElementsByClassName('distinct-choice');
@@ -276,6 +320,10 @@
             var delayTimer;
             
             function getPage(page = 1, search_type = 'search', tag = null, genre = null) {
+                // TODO make it scroll AND after the scroll fetch backend with results
+                if (tag || genre) {
+                    window.scrollTo({ top: 0, left: 0, behavior: "smooth" })
+                }
                 var searchfieldIneed = document.getElementById('search_name_author_tag');
                 var sort_boxes = document.getElementsByClassName('distinct-choice');
                 var sorting_order = Array.from(sort_boxes).find(item => item.checked)?.value || "";
@@ -289,16 +337,16 @@
                     var genre_boxes = document.getElementsByClassName('genre-checkbox-input');
                     var genres = Array.from(genre_boxes).forEach(item => item.checked = parseInt(item.value) === genre);
                     final_genres = genre;
+                    console.log('weve gone here')
                 }
+
+                var selected_tags_container = document.getElementById('selected-tags');
+                var tags = Array.from(selected_tags_container.getElementsByClassName('selected-tag-wrapper')).map(tags => tags.dataset.id)
+                final_tags = tags.join(',');
 
                 var search_prompt = searchfieldIneed.value || "";
 
-                if (tag == null) {
-                    var url = `${MAINURL}/get_story_page?search_type=${search_type}&search_prompt=${search_prompt}&sort_by=${sorting_order}&page=${page}&genres=${final_genres}`;
-                }
-                else {
-                    var url = `${MAINURL}/get_story_page?search_type=${search_type}&search_prompt=${search_prompt}&sort_by=${sorting_order}&page=${page}&genres=${final_genres}&tag=${tag}`;
-                }
+                url = `${MAINURL}/get_story_page?search_type=${search_type}&search_prompt=${search_prompt}&sort_by=${sorting_order}&page=${page}&genres=${final_genres}&tags=${final_tags}`;
                 fetch(url, {
                         method: "GET",
                         headers:{
@@ -363,14 +411,44 @@
                     genre.className = 'story-genre';
 
                     var tags = document.createElement('div');
-                    tags.className = 'tags-wrapper';
+                    tags.className = 'story-tags-wrapper';
                     
-                    data[i].tags.forEach(tag => {
+                    for (let j = 0; j < data[i].tags.length; j++) {
                         let distinct_tag = document.createElement('p');
-                        distinct_tag.className = 'tag-wrapper';
-                        distinct_tag.innerHTML = '#' + tag.tag;
-                        tags.appendChild(distinct_tag); 
-                    })
+                        distinct_tag.className = 'story-tag-wrapper';
+                        distinct_tag.innerHTML = '#' + data[i].tags[j].tag;
+                        tags.appendChild(distinct_tag);
+
+                        let selected_tags_container = document.getElementById('selected-tags');
+                        distinct_tag.addEventListener('click', function(event, info=data, index=i, index2=j) {
+                            event.stopPropagation();
+                            // create tag box for Tags filter
+                            if (Array.from(selected_tags_container.getElementsByClassName('selected-tag-wrapper')).filter(item => item.dataset.id == info[index].tags[index2].id).length == 0) {
+                                let tag_container = document.createElement('div');
+                                tag_container.className = 'selected-tag-wrapper';
+                                tag_container.setAttribute('data-id', info[index].tags[index2].id)
+                                
+                                let tag_name = document.createElement('p');
+                                tag_name.textContent = '#' + info[index].tags[index2].tag;
+
+                                let close = document.createElement('span');
+                                close.innerHTML = '&times;';
+
+                                close.addEventListener('click', function(event) {
+                                    selected_tags_container.removeChild(event.target.parentElement);
+                                    getPage(1, 'search', null, null);
+                                });
+
+                                tag_container.appendChild(tag_name)
+                                tag_container.appendChild(close)
+
+                                selected_tags_container.appendChild(tag_container);
+
+                                getPage(1, 'search', info[index].tags[index2].id, null);
+
+                            }    
+                        })
+                    }
 
                     story_title.appendChild(title);
                     story_title.appendChild(genre);
@@ -411,6 +489,7 @@
 
                     genre.addEventListener('click', function(event, info=data, index=i) {
                         event.stopPropagation();
+
                         getPage(1, 'search', null, info[index].genre.id)
 
                     })
@@ -537,8 +616,34 @@
 
                     tags_box.appendChild(tag_wrapper);
 
-                    tag_wrapper.addEventListener('click', function() {
+                    let selected_tags_container = document.getElementById('selected-tags');
 
+                    tag_wrapper.addEventListener('click', function() {
+                        // create tag box for Tags filter
+                        if (Array.from(selected_tags_container.getElementsByClassName('selected-tag-wrapper')).filter(item => item.dataset.id == data[i].id).length == 0) {
+                            let tag_container = document.createElement('div');
+                            tag_container.className = 'selected-tag-wrapper';
+                            tag_container.setAttribute('data-id', data[i].id)
+                            
+                            let tag_name = document.createElement('p');
+                            tag_name.textContent = '#' + data[i].tag;
+
+                            let close = document.createElement('span');
+                            close.innerHTML = '&times;';
+
+                            close.addEventListener('click', function(event) {
+                                selected_tags_container.removeChild(event.target.parentElement);
+                                getPage(1, 'search', null, null);
+                            });
+
+                            tag_container.appendChild(tag_name)
+                            tag_container.appendChild(close)
+
+                            selected_tags_container.appendChild(tag_container);
+
+                            getPage(1, 'search', data[i].id, null);
+
+                        }
                     })
 
                 }
