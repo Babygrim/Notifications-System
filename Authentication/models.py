@@ -1,18 +1,13 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
-import random
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .serializers import UserSerializer
 
-def generateNumbers():
-    return ('').join([str(num) for num in random.choices([i for i in range(10)], k=8)])
-
 class UserProfileWriter(models.Model):
-    writer_pseudo = models.CharField(max_length=100, default=f'User-{generateNumbers()} Author')
+    writer_pseudo = models.CharField(max_length=100, unique=True)
     
-    subscribers_counter = models.PositiveBigIntegerField(default=0) 
     total_likes_counter = models.PositiveBigIntegerField(default=0) 
     total_story_views_counter = models.PositiveBigIntegerField(default=0) 
     
@@ -57,7 +52,6 @@ class UserProfileReader(models.Model):
 class BaseUserProfile(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     avatar = models.ImageField(upload_to='avatars/', default='avatars/default.jpg')
-    displayable_name = models.CharField(max_length=20, default=f'User-{generateNumbers()}')
     is_premium = models.BooleanField(default=False)
     
     reader = models.ForeignKey(UserProfileReader, on_delete=models.DO_NOTHING)
@@ -68,18 +62,17 @@ class BaseUserProfile(models.Model):
             'id': self.id,
             'bound_user': UserSerializer(self.user).data,
             'avatar': self.avatar.url,
-            'displayable_name': self.displayable_name,
             'premium': self.is_premium,
-            'bound_reader_profile': self.reader.serialize_load() if self.reader else None,
+            'bound_reader_profile': self.reader.serialize_load(),
             'bound_writer_profile': self.writer.serialize_load() if self.writer else None,
         }
     
     def serialize_for_others(self):
         return {
             'avatar': self.avatar.url,
-            'displayable_name': self.displayable_name,
             'premium': self.is_premium,
-            'bound_writer_profile': self.writer.serialize_load()
+            'bound_user': UserSerializer(self.user).data,
+            'bound_writer_profile': self.writer.serialize_load() if self.writer else None
         }
     
     
