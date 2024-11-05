@@ -3,24 +3,25 @@ from Authentication.models import BaseUserProfile, UserProfileWriter
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from math import floor
-from time import time
 from django.utils import timezone
+from Authentication.serializers import ProfileSerializerForExtras
+from TestProject.serializers import CustomDateTimeField
 
 # Create your models here.
 class UserStoryCommentedNotification(models.Model):
     receiver = models.ForeignKey(UserProfileWriter, on_delete=models.CASCADE)
     source = models.ForeignKey('Stories.Post', on_delete=models.CASCADE)
-    created_at = models.DateTimeField(default=timezone.now)
+    created = models.DateTimeField(default=timezone.now)
     comment = models.ForeignKey('Comments.Comment', on_delete=models.CASCADE)
     
     def serialize(self):
         return {
             'id': self.id,
-            'created_at': self.whenAdded(),
+            'created': CustomDateTimeField().to_representation(self.created),
             'post_id': self.source.id,
             'post_title': self.source.post_title,
             'comment_id': self.comment.id,
-            'comment_creator': self.comment.creator.serialize_notif(),
+            'comment_creator': ProfileSerializerForExtras(self.comment.creator_id).data,
             'story': False,
             'story_commented': True,
             'comment': False,
@@ -29,7 +30,7 @@ class UserStoryCommentedNotification(models.Model):
         
     def whenAdded(self):
         current_datetime = timezone.now()
-        object_added_datetime = self.created_at
+        object_added_datetime = self.created
         time_difference = current_datetime - object_added_datetime
         minutes = floor(time_difference.total_seconds() / 60)
         hours = floor(minutes / 60)
@@ -42,17 +43,17 @@ class UserCommentRepliedNotification(models.Model):
     receiver = models.ForeignKey(BaseUserProfile, on_delete=models.CASCADE)
     source = models.ForeignKey('Comments.Comment', on_delete=models.CASCADE)
     parent_source = models.ForeignKey('Stories.Post', on_delete=models.CASCADE)
-    created_at = models.DateTimeField(default=timezone.now)
+    created = models.DateTimeField(default=timezone.now)
     
     def serialize(self):
         return {
             'id': self.id,
-            'created_at': self.whenAdded(),
+            'created': CustomDateTimeField().to_representation(self.created),
             'post_id': self.parent_source.id,
             'post_title': self.parent_source.post_title,
             'reply_id': self.source.id,
-            'parent_comment_id': self.source.parent_comment.id,
-            'creator': self.source.parent_comment.creator.serialize_notif(),
+            'parent_comment_id': self.source.parent_comment_id.id,
+            'creator': ProfileSerializerForExtras(self.source.parent_comment_id.creator_id).data,
             'story': False,
             'story_commented': False,
             'comment': True,
@@ -61,7 +62,7 @@ class UserCommentRepliedNotification(models.Model):
         
     def whenAdded(self):
         current_datetime = timezone.now()
-        object_added_datetime = self.created_at
+        object_added_datetime = self.created
         time_difference = current_datetime - object_added_datetime
         minutes = floor(time_difference.total_seconds() / 60)
         hours = floor(minutes / 60)
@@ -74,13 +75,13 @@ class UserCommentRepliedNotification(models.Model):
 class AdministrativeOverallNotifications(models.Model):
     message_title = models.CharField(max_length=255)
     message = models.CharField(max_length=255)
-    created_at = models.DateTimeField(default=timezone.now)
+    created = models.DateTimeField(default=timezone.now)
     
     def serialize(self):
         return {
             'id':self.id,
             'message': self.message,
-            'created_at': self.whenAdded(),
+            'created': CustomDateTimeField().to_representation(self.created),
             'story': False,
             'story_commented': False,
             'comment': False,
@@ -89,7 +90,7 @@ class AdministrativeOverallNotifications(models.Model):
 
     def whenAdded(self):
         current_datetime = timezone.now()
-        object_added_datetime = self.created_at
+        object_added_datetime = self.created
         time_difference = current_datetime - object_added_datetime
         minutes = floor(time_difference.total_seconds() / 60)
         hours = floor(minutes / 60)
@@ -104,14 +105,14 @@ class AdministrativeOverallNotifications(models.Model):
 class UserStoryCreatedNotification(models.Model):
     creator = models.ForeignKey(UserProfileWriter, on_delete=models.CASCADE)
     source = models.ForeignKey('Stories.Post', on_delete=models.CASCADE)
-    created_at = models.DateTimeField(default=timezone.now)
+    created = models.DateTimeField(default=timezone.now)
     
     def serialize(self):
         return {
             'id':self.id,
-            'creator_id': self.creator.id,
-            'creator_username': self.creator.writer_pseudo,
-            'created_at': self.whenAdded(),
+            'creator_id': self.creator_id.id,
+            'creator_username': self.creator_id.writer_pseudo,
+            'created': CustomDateTimeField().to_representation(self.created),
             'postId': self.source.id,
             'post_name': self.source.post_title,
             'story': True,
@@ -122,7 +123,7 @@ class UserStoryCreatedNotification(models.Model):
         
     def whenAdded(self):
         current_datetime = timezone.now()
-        object_added_datetime = self.created_at
+        object_added_datetime = self.created
         time_difference = current_datetime - object_added_datetime
         minutes = floor(time_difference.total_seconds() / 60)
         hours = floor(minutes / 60)

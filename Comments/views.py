@@ -1,12 +1,7 @@
-from django.shortcuts import redirect
-from django.http import HttpResponseRedirect
-from Notifications.models import UserCommentRepliedNotification, UserStoryCommentedNotification
 from .models import *
 from Stories.models import Post
-from django.http import JsonResponse
 from Notifications.models import *
 from django.core.paginator import Paginator
-import json
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.views import APIView

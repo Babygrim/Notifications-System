@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     
-    path('get_notifications', getUserNotifications, name='getNotifications'),
-    path('mark_as_read/', MarkAsRead, name='markAsRead'),
+    path('all', GetNotifications.as_view(), name='getNotifications'),
+    path('mark_as_read', MarkAsRead.as_view(), name='markAsRead'),
     
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

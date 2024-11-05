@@ -1,11 +1,11 @@
 from rest_framework import serializers
 from .models import Comment
 from TestProject.serializers import CustomDateTimeField
-from Authentication.serializers import ProfileSerializerForComments
+from Authentication.serializers import ProfileSerializerForExtras
 
 class CommentSerializer(serializers.ModelSerializer):
     created = CustomDateTimeField()
-    creator_id = ProfileSerializerForComments()
+    creator_id = ProfileSerializerForExtras()
     replies_count = serializers.SerializerMethodField()
     
     class Meta:

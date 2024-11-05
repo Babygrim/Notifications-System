@@ -90,7 +90,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             for subscription in subscribed_to:
                 subscr_information = SubscriptionTimeStampThrough.objects.get(reader = obj.reader, writer = subscription)
                 if subscr_information.receive_notifications:
-                    total += UserStoryCreatedNotification.objects.filter(creator = subscription).exclude(created_at__lt = subscr_information.when_subscribed).exclude(id__in = sc_ids).count()
+                    total += UserStoryCreatedNotification.objects.filter(creator = subscription).exclude(created__lt = subscr_information.when_subscribed).exclude(id__in = sc_ids).count()
         
         total += UserCommentRepliedNotification.objects.filter(receiver = obj).exclude(id__in=cr_ids).count()
         
@@ -104,7 +104,7 @@ class ProfileSerializerForOthers(serializers.ModelSerializer):
         model = BaseUserProfile
         fields = ('avatar', 'is_premium', 'writer')
 
-class ProfileSerializerForComments(serializers.ModelSerializer):
+class ProfileSerializerForExtras(serializers.ModelSerializer):
     username = serializers.SerializerMethodField()
     
     class Meta:
