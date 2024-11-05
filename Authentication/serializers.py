@@ -4,7 +4,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.validators import UniqueValidator
 from .models import BaseUserProfile, UserProfileReader, UserProfileWriter, SubscriptionTimeStampThrough
 from django.contrib.auth.models import User
-from Notifications.models import MarkedAsRead, UserCommentRepliedNotification, UserStoryCommentedNotification, UserStoryCreatedNotification, AdministrativeOverallNotifications
+import Notifications.models as notificationMod
 # Create your models here.
 
 class UserSerializer(serializers.ModelSerializer):
@@ -68,9 +68,9 @@ class ProfileSerializer(serializers.ModelSerializer):
         
     def get_notifications_num(self, obj):
         try:
-            mark = MarkedAsRead.objects.get(user = obj)
-        except MarkedAsRead.DoesNotExist:
-            mark = MarkedAsRead(user = obj)
+            mark = notificationMod.MarkedAsRead.objects.get(user = obj)
+        except notificationMod.MarkedAsRead.DoesNotExist:
+            mark = notificationMod.MarkedAsRead(user = obj)
             mark.save()
         
         total = 0
@@ -80,23 +80,22 @@ class ProfileSerializer(serializers.ModelSerializer):
         sc_ids = mark.notifications_sc.values_list('id', flat=True)
         scom_ids = mark.notifications_scom.values_list('id', flat=True)
 
-        total += AdministrativeOverallNotifications.objects.all().exclude(id__in = ao_ids).count()
+        total += notificationMod.AdministrativeOverallNotifications.objects.all().exclude(id__in = ao_ids).count()
         
         if obj.writer:
-            total += UserStoryCommentedNotification.objects.filter(receiver = obj.writer).exclude(id__in=scom_ids).count()
+            total += notificationMod.UserStoryCommentedNotification.objects.filter(receiver = obj.writer).exclude(id__in=scom_ids).count()
         
         subscribed_to = obj.reader.subscribed_to.all()
         if subscribed_to.count() > 0:
             for subscription in subscribed_to:
                 subscr_information = SubscriptionTimeStampThrough.objects.get(reader = obj.reader, writer = subscription)
                 if subscr_information.receive_notifications:
-                    total += UserStoryCreatedNotification.objects.filter(creator = subscription).exclude(created__lt = subscr_information.when_subscribed).exclude(id__in = sc_ids).count()
+                    total += notificationMod.UserStoryCreatedNotification.objects.filter(creator = subscription).exclude(created__lt = subscr_information.when_subscribed).exclude(id__in = sc_ids).count()
         
-        total += UserCommentRepliedNotification.objects.filter(receiver = obj).exclude(id__in=cr_ids).count()
+        total += notificationMod.UserCommentRepliedNotification.objects.filter(receiver = obj).exclude(id__in=cr_ids).count()
         
         return total
-        
-        
+         
 class ProfileSerializerForOthers(serializers.ModelSerializer):
     writer = WriterSerializer()
     

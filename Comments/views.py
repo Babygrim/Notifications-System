@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import CommentSerializer, ReactionCommentSerializer
 
-# Create your views here.
+#Fetch comments or replies for comment
 class GetComments(APIView):
     permission_classes = (AllowAny,)
     
@@ -19,8 +19,9 @@ class GetComments(APIView):
         
         # meaning get replies else - get main comments
         if comment_id:
+            parent_comment = Comment.objects.get(pk = int(comment_id))
             try:
-                get_all_replies = Comment.objects.filter(parent_comment_id__id = int(comment_id)).order_by('created')
+                get_all_replies = Comment.objects.filter(parent_comment_id = parent_comment).order_by('created')
             except Comment.DoesNotExist:
                 return Response({"success": False, "data": {}, "message": 'Parent comment does not exist'})
             
@@ -49,7 +50,8 @@ class GetComments(APIView):
                 "data": CommentSerializer(get_page.object_list, many=True).data
         }
         return Response({"success": True, "data": response, "message": ''})
-              
+
+#Create comment or reply              
 class CreateComments(APIView):
     authentication_classes = (JWTAuthentication, )
     permission_classes = (IsAuthenticated, )
@@ -64,13 +66,8 @@ class CreateComments(APIView):
         comment_body = data.get('comment_body', None)
         request_user = BaseUserProfile.objects.get(user = request.user)
         
-        if story_id == None or comment_body == None:
-            return Response({"success": False, "data": {}, "message": f'Request body missing comment_body and/or story_id'})
-
-        try:
-            story = Post.objects.get(pk=int(story_id))
-        except Post.DoesNotExist:
-            return Response({"success": False, "data": {}, "message": f'story with id={story_id} does not exist'})
+        if (story_id == None and comment_body == None) or (parent_comment_id == None and comment_body == None):
+            return Response({"success": False, "data": {}, "message": f'Request body requires (parent_comment_id, comment_body) or (story_id, comment_body) data combination'})
 
         # creating replies or nested replies
         if parent_comment_id:
@@ -84,6 +81,7 @@ class CreateComments(APIView):
             while real_parent.parent_comment_id != None:
                 real_parent = real_parent.parent_comment_id
             
+            story = real_parent.story_id
             if real_parent != get_comment:
                 comment_body = f"@{get_comment.creator_id.user.username}, " + comment_body
             
@@ -103,6 +101,11 @@ class CreateComments(APIView):
                 
         # creating main comment
         else:
+            try:
+                story = Post.objects.get(pk=int(story_id))
+            except Post.DoesNotExist:
+                return Response({"success": False, "data": {}, "message": f'story with id={story_id} does not exist'})
+        
             # handle comment creation
             comment = Comment(creator_id = request_user,
                               story_id = story,
@@ -120,6 +123,7 @@ class CreateComments(APIView):
         story.save()   
         return Response({"success": True, "data": {}, "message": "Comment created successfully"})
 
+#React to comment or reply
 class LikeUnlikeComment(APIView):
     authentication_classes = (JWTAuthentication, )
     permission_classes = (IsAuthenticated, )

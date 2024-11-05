@@ -58,23 +58,7 @@ class RegisterView(generics.CreateAPIView):
         else:
             return Response({"success": False,  "data": {}, "message": serializer.errors})
 
-# #Log Out
-# class LogoutView(APIView):
-#     authentication_classes = (JWTAuthentication,)
-#     permission_classes = (IsAuthenticated,)
-
-#     def post(self, request):
-#         try:
-#             # Extract the refresh token from the request data
-#             refresh_token = request.data.get("refresh")
-#             token = RefreshToken(refresh_token)
-#             # Blacklist the token
-#             token.blacklist()
-
-#             return JsonResponse({"success": True, "data": {}, "message": ""})
-#         except Exception as e:
-#             return JsonResponse({"success": False, "data": {}, "message": "Invalid token or token not provided."})
-
+#View User Profile
 class ViewProfile(APIView):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated, )
@@ -95,26 +79,29 @@ class ViewProfile(APIView):
         profile = BaseUserProfile.objects.get(user = request.user)
         
         data = request.data
+        new_pseudo = data.get('author_pseudo', None)
+        new_avatar = data.get('avatar', None)
+        msg = ""
         
         if profile.writer:
-            new_pseudo = data.get('author_pseudo', None)
-            
             if new_pseudo:
                 profile.writer.writer_pseudo = new_pseudo
                 profile.writer.save()
                 profile.save()
-        
-        new_avatar = data.get('avatar', None)
+        else:
+            msg = "User has no writer profile so skipping author_pseudo (if it was passed). "
 
         if new_avatar:
             profile.avatar = new_avatar
             profile.save()
+            msg += "Updated user avatar"
               
         if new_avatar == None and new_pseudo == None:
             return Response({"success": False, "data": {}, "message": 'Nothing was updated. Patchable parameters are "author_pseudo" and "avatar"'})
             
-        return Response({"success": True, "data": {}, "message": 'Profile updated successfully'})
-             
+        return Response({"success": True, "data": {}, "message": 'Profile updated successfully. ' + msg})
+   
+#Make BaseUser Writer Profile          
 class BecomeWriter(APIView):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated, )
@@ -144,7 +131,8 @@ class BecomeWriter(APIView):
                     return Response({'success': True, 'data': {"profile": ProfileSerializer(profile).data}, 'message': ''})
             else:
                 return Response({'success': False, 'data': {}, 'message': {"author_pseudo": "This field is required"}})
-        
+ 
+#Subscribe to author       
 class Subscribe(APIView):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -185,6 +173,7 @@ class Subscribe(APIView):
         else:
             return Response({"success": False, "data": {}, "message": f"'author_id' is required request body field"})
         
+#Fetch profile subscription
 class Subscriptions(APIView):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -193,7 +182,8 @@ class Subscriptions(APIView):
         profile = BaseUserProfile.objects.get(user = request.user)
         
         return Response({"success": True, "data": WriterSerializer(profile.reader.subscribed_to.all(), many = True).data, "message": ""})
-        
+   
+#Choose whether or not to receive notifications from Writer Profile creating story     
 class NotificationsSetup(APIView):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)

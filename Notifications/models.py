@@ -3,6 +3,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 from TestProject.serializers import CustomDateTimeField
+import Authentication.serializers as authSerialize
 
 # Create your models here.
 class UserStoryCommentedNotification(models.Model):
@@ -12,14 +13,13 @@ class UserStoryCommentedNotification(models.Model):
     comment = models.ForeignKey('Comments.Comment', on_delete=models.CASCADE)
     
     def serialize(self):
-        from Authentication.serializers import ProfileSerializerForExtras
         return {
             'id': self.id,
             'created': CustomDateTimeField().to_representation(self.created),
             'post_id': self.source.id,
             'post_title': self.source.post_title,
             'comment_id': self.comment.id,
-            'comment_creator': ProfileSerializerForExtras(self.comment.creator_id).data,
+            'comment_creator': authSerialize.ProfileSerializerForExtras(self.comment.creator_id).data,
             'story': False,
             'story_commented': True,
             'comment': False,
@@ -34,7 +34,6 @@ class UserCommentRepliedNotification(models.Model):
     created = models.DateTimeField(default=timezone.now)
     
     def serialize(self):
-        from Authentication.serializers import ProfileSerializerForExtras
         return {
             'id': self.id,
             'created': CustomDateTimeField().to_representation(self.created),
@@ -42,7 +41,7 @@ class UserCommentRepliedNotification(models.Model):
             'post_title': self.parent_source.post_title,
             'reply_id': self.source.id,
             'parent_comment_id': self.source.parent_comment_id.id,
-            'creator': ProfileSerializerForExtras(self.source.parent_comment_id.creator_id).data,
+            'creator': authSerialize.ProfileSerializerForExtras(self.source.parent_comment_id.creator_id).data,
             'story': False,
             'story_commented': False,
             'comment': True,

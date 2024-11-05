@@ -21,7 +21,7 @@ urlpatterns = [
     path('ainsgdgnaisdjgnadisngiadsngg820n0g78432n03478g/', admin.site.urls),
     path('api/comments/', include("Comments.urls")),
     path('api/notifications/', include("Notifications.urls")),
-    path('api/', include('Stories.urls')),
+    path('api/stories/', include('Stories.urls')),
     path('api/auth/', include('Authentication.urls')),
     path('api/tests/', include('TestingApplication.urls')),
 ]

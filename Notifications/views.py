@@ -2,13 +2,12 @@ from .models import *
 from django.http import JsonResponse
 from Authentication.models import BaseUserProfile, SubscriptionTimeStampThrough
 from django.core.paginator import Paginator
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-# Create your views here.
-
+#Fetch profile notifications
 class GetNotifications(APIView):
     authentication_classes = (JWTAuthentication, )
     permission_classes = (IsAuthenticated, )
@@ -78,6 +77,7 @@ class GetNotifications(APIView):
         
         return Response({"success": True, "data": response, "message": ""})
 
+#Mark profile notifications as Read
 class MarkAsRead(APIView):
     authentication_classes = (JWTAuthentication, )
     permission_classes = (IsAuthenticated, )
@@ -121,8 +121,7 @@ class MarkAsRead(APIView):
             return Response({"success": False, "data": {}, "message": "Invalid type (type can should be 'sc', 'scom', 'cr', 'ao')"})
         
         mark.save()
-        
-        return Response({"success": True, "data": {}, "message": "Notification marked as read."})
+        return Response({"success": True, "data": {}, "message": "Notification marked as read. (If user didn't have notification with that ID in a first place - this does no good no harm)"})
     
             
         

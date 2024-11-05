@@ -161,7 +161,7 @@ SIMPLE_JWT = {
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_WHITELIST = (
-    ' http://localhost:3000',
+    'http://localhost:3000',
 )
 
 SESSION_COOKIE_AGE = 1209600

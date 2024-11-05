@@ -8,6 +8,7 @@ class UserProfileWriter(models.Model):
     writer_pseudo = models.CharField(max_length=100, unique=True)
     
     total_likes_counter = models.PositiveBigIntegerField(default=0) 
+    total_dislikes_counter = models.PositiveBigIntegerField(default=0) 
     total_story_views_counter = models.PositiveBigIntegerField(default=0) 
         
 class UserProfileReader(models.Model):
