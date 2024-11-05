@@ -4,7 +4,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.validators import UniqueValidator
 from .models import BaseUserProfile, UserProfileReader, UserProfileWriter, SubscriptionTimeStampThrough
 from django.contrib.auth.models import User
-from Notifications.models import *
+from Notifications.models import MarkedAsRead, UserCommentRepliedNotification, UserStoryCommentedNotification, UserStoryCreatedNotification, AdministrativeOverallNotifications
 # Create your models here.
 
 class UserSerializer(serializers.ModelSerializer):

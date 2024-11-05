@@ -1,20 +1,18 @@
 from django.db import models
-from Authentication.models import BaseUserProfile, UserProfileWriter
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from math import floor
 from django.utils import timezone
-from Authentication.serializers import ProfileSerializerForExtras
 from TestProject.serializers import CustomDateTimeField
 
 # Create your models here.
 class UserStoryCommentedNotification(models.Model):
-    receiver = models.ForeignKey(UserProfileWriter, on_delete=models.CASCADE)
+    receiver = models.ForeignKey("Authentication.UserProfileWriter", on_delete=models.CASCADE)
     source = models.ForeignKey('Stories.Post', on_delete=models.CASCADE)
     created = models.DateTimeField(default=timezone.now)
     comment = models.ForeignKey('Comments.Comment', on_delete=models.CASCADE)
     
     def serialize(self):
+        from Authentication.serializers import ProfileSerializerForExtras
         return {
             'id': self.id,
             'created': CustomDateTimeField().to_representation(self.created),
@@ -28,24 +26,15 @@ class UserStoryCommentedNotification(models.Model):
             'admin': False,
         }
         
-    def whenAdded(self):
-        current_datetime = timezone.now()
-        object_added_datetime = self.created
-        time_difference = current_datetime - object_added_datetime
-        minutes = floor(time_difference.total_seconds() / 60)
-        hours = floor(minutes / 60)
-        days = floor(hours / 24)
-        years = floor(days / 365)
-        
-        return f'{years} years ago' if years > 0 else f'{days} days ago' if days > 0 else f'{hours} hours ago' if hours > 0 else f'{minutes} minutes ago'
 
 class UserCommentRepliedNotification(models.Model):
-    receiver = models.ForeignKey(BaseUserProfile, on_delete=models.CASCADE)
+    receiver = models.ForeignKey("Authentication.BaseUserProfile", on_delete=models.CASCADE)
     source = models.ForeignKey('Comments.Comment', on_delete=models.CASCADE)
     parent_source = models.ForeignKey('Stories.Post', on_delete=models.CASCADE)
     created = models.DateTimeField(default=timezone.now)
     
     def serialize(self):
+        from Authentication.serializers import ProfileSerializerForExtras
         return {
             'id': self.id,
             'created': CustomDateTimeField().to_representation(self.created),
@@ -60,18 +49,7 @@ class UserCommentRepliedNotification(models.Model):
             'admin': False,
         }
         
-    def whenAdded(self):
-        current_datetime = timezone.now()
-        object_added_datetime = self.created
-        time_difference = current_datetime - object_added_datetime
-        minutes = floor(time_difference.total_seconds() / 60)
-        hours = floor(minutes / 60)
-        days = floor(hours / 24)
-        years = floor(days / 365)
-        
-        return f'{years} years ago' if years > 0 else f'{days} days ago' if days > 0 else f'{hours} hours ago' if hours > 0 else f'{minutes} minutes ago'
-        
-        
+         
 class AdministrativeOverallNotifications(models.Model):
     message_title = models.CharField(max_length=255)
     message = models.CharField(max_length=255)
@@ -88,22 +66,12 @@ class AdministrativeOverallNotifications(models.Model):
             'admin': True,
         }
 
-    def whenAdded(self):
-        current_datetime = timezone.now()
-        object_added_datetime = self.created
-        time_difference = current_datetime - object_added_datetime
-        minutes = floor(time_difference.total_seconds() / 60)
-        hours = floor(minutes / 60)
-        days = floor(hours / 24)
-        years = floor(days / 365)
-        
-        return f'{years} years ago' if years > 0 else f'{days} days ago' if days > 0 else f'{hours} hours ago' if hours > 0 else f'{minutes} minutes ago'
     
     def __str__(self) -> str:
         return self.message_title
     
 class UserStoryCreatedNotification(models.Model):
-    creator = models.ForeignKey(UserProfileWriter, on_delete=models.CASCADE)
+    creator = models.ForeignKey("Authentication.UserProfileWriter", on_delete=models.CASCADE)
     source = models.ForeignKey('Stories.Post', on_delete=models.CASCADE)
     created = models.DateTimeField(default=timezone.now)
     
@@ -121,19 +89,9 @@ class UserStoryCreatedNotification(models.Model):
             'admin': False,
         }
         
-    def whenAdded(self):
-        current_datetime = timezone.now()
-        object_added_datetime = self.created
-        time_difference = current_datetime - object_added_datetime
-        minutes = floor(time_difference.total_seconds() / 60)
-        hours = floor(minutes / 60)
-        days = floor(hours / 24)
-        years = floor(days / 365)
-        
-        return f'{years} years ago' if years > 0 else f'{days} days ago' if days > 0 else f'{hours} hours ago' if hours > 0 else f'{minutes} minutes ago'
      
 class MarkedAsRead(models.Model):
-    user = models.ForeignKey(BaseUserProfile, on_delete=models.CASCADE)
+    user = models.ForeignKey("Authentication.BaseUserProfile", on_delete=models.CASCADE)
     
     notifications_sc = models.ManyToManyField(UserStoryCreatedNotification)
     notifications_scom = models.ManyToManyField(UserStoryCommentedNotification)
@@ -141,7 +99,7 @@ class MarkedAsRead(models.Model):
     notifications_ao = models.ManyToManyField(AdministrativeOverallNotifications)
     
     
-@receiver(post_save, sender=BaseUserProfile)
+@receiver(post_save, sender="Authentication.BaseUserProfile")
 def markRead(sender, instance, created, **kwargs):
     if created:
         mark = MarkedAsRead(user = instance)
