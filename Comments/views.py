@@ -1,124 +1,144 @@
 from django.shortcuts import redirect
 from django.http import HttpResponseRedirect
-from Notifications.models import UserCommentRepliedNotification
+from Notifications.models import UserCommentRepliedNotification, UserStoryCommentedNotification
 from .models import *
 from Stories.models import Post
 from django.http import JsonResponse
 from Notifications.models import *
 from django.core.paginator import Paginator
 import json
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from .serializers import CommentSerializer, ReactionCommentSerializer
 
 # Create your views here.
-  
-def getCommentReplies(request):
-    if request.method == "GET":
-        comment_id = request.GET.get('parent')
+class GetComments(APIView):
+    permission_classes = (AllowAny,)
+    
+    def get(self, request):
+        comment_id = request.GET.get('parent_comment_id', None)
+        story_id = request.GET.get('story_id', None)
         req_page = request.GET.get('page', 1)
         
-        get_all_replies = Comment.objects.filter(parent_comment__id = comment_id).order_by('date_created')
+        # meaning get replies else - get main comments
+        if comment_id:
+            try:
+                get_all_replies = Comment.objects.filter(parent_comment_id__id = int(comment_id)).order_by('created')
+            except Comment.DoesNotExist:
+                return Response({"success": False, "data": {}, "message": 'Parent comment does not exist'})
+            
+            paginated = Paginator(get_all_replies, per_page=10)
+            get_page = paginated.get_page(req_page)
         
-        paginated = Paginator(get_all_replies, per_page=10)
-
-        get_page = paginated.get_page(req_page)
-    
-        payload = [elem.serializer() for elem in get_page.object_list]
-
+        elif story_id:
+            try:
+                get_all_comments = Comment.objects.filter(story_id = int(story_id), parent_comment_id = None)
+            except Comment.DoesNotExist:
+                return Response({"success": False, "data": {}, "message": f'This story has no comments yet or story with id={story_id} does not exist'})
+            
+            paginated = Paginator(get_all_comments, per_page=10)
+            get_page = paginated.get_page(req_page)
+        
+        else:
+            return Response({"success": False, "data": {}, "message": 'parent_comment_id was not passed - no replies fetched, story_id was not passed - no comments fetched'})
+        
         response = {
                 "page": {
                     "current": get_page.number,
+                    "total": paginated.num_pages,
                     "has_next": get_page.has_next(),
                     "has_previous": get_page.has_previous(),
                 },
-                "replies": payload
+                "data": CommentSerializer(get_page.object_list, many=True).data
         }
-        return JsonResponse({"data": response}, safe=True)
+        return Response({"success": True, "data": response, "message": ''})
+              
+class CreateComments(APIView):
+    authentication_classes = (JWTAuthentication, )
+    permission_classes = (IsAuthenticated, )
     
-    elif request.method == "POST":
-        data = request.POST
+    def post(self, request):
+        # getting the request data
+        data = request.data
         
-        if request.user:
-            story = Post.objects.get(pk=data.get('post_id'))
-            get_comment = Comment.objects.get(pk=int(data.get('parent_id')))
-            real_parent = Comment.objects.get(pk=int(data.get('real_parent_id')))
+        # fetchin required parameters
+        parent_comment_id = data.get('parent_comment_id', None)
+        story_id = data.get('story_id', None)
+        comment_body = data.get('comment_body', None)
+        request_user = BaseUserProfile.objects.get(user = request.user)
+        
+        if story_id == None or comment_body == None:
+            return Response({"success": False, "data": {}, "message": f'Request body missing comment_body and/or story_id'})
+
+        try:
+            story = Post.objects.get(pk=int(story_id))
+        except Post.DoesNotExist:
+            return Response({"success": False, "data": {}, "message": f'story with id={story_id} does not exist'})
+
+        # creating replies or nested replies
+        if parent_comment_id:
+            try:
+                get_comment = Comment.objects.get(pk=int(parent_comment_id))
+            except Comment.DoesNotExist:
+                return Response({"success": False, "data": {}, "message": f'Parent comment with id={parent_comment_id} does not exist'})
+
+            # handle reply creation
+            real_parent = get_comment
+            while real_parent.parent_comment_id != None:
+                real_parent = real_parent.parent_comment_id
             
-            user_to_notify = data.get('user_to_notify', None)
+            if real_parent != get_comment:
+                comment_body = f"@{get_comment.creator_id.user.username}, " + comment_body
             
-            if real_parent.parent_comment:
-                comment_string = f"<a href='http://127.0.0.1:8000/view_profile?user={real_parent.creator.id}' class='user-link'>@{real_parent.creator.displayable_name}</a>, " + data.get('comment_body')
-            else:
-                comment_string = data.get('comment_body')
+            reply_to_comment = Comment(creator_id = request_user, 
+                                       story_id = story, 
+                                       parent_comment_id = real_parent, 
+                                       comment_body = comment_body)
             
-            if user_to_notify:
-                base_user = BaseUserProfile.objects.get(user=request.user)
-                receiver = BaseUserProfile.objects.get(id=int(user_to_notify))
+            reply_to_comment.save()
+            
+            # handle notification creation
+            user_to_notify = get_comment.creator_id
+            
+            if request_user != user_to_notify:
+                create_notification = UserCommentRepliedNotification(receiver = user_to_notify, source = reply_to_comment, parent_source = story)
+                create_notification.save()
                 
-                reply_to_comment = Comment(creator = base_user, post = story, parent_comment = get_comment, comment_body = comment_string)
-                reply_to_comment.save()
-                
-                if base_user != receiver:
-                    create_notification = UserCommentRepliedNotification(receiver = receiver, source = reply_to_comment, parent_source = story)
-                    create_notification.save()
-            else:
-                base_user = BaseUserProfile.objects.get(user=request.user)
-                reply_to_comment = Comment(creator = base_user, post = story, parent_comment = get_comment, comment_body = comment_string)
-                reply_to_comment.save()
-                
-                if base_user != get_comment.creator:
-                    create_notification = UserCommentRepliedNotification(receiver = get_comment.creator, source = reply_to_comment, parent_source = story)
-                    create_notification.save()
-                
-            return HttpResponseRedirect(data.get('next', '/'))
+        # creating main comment
         else:
-            return HttpResponseRedirect('login')
+            # handle comment creation
+            comment = Comment(creator_id = request_user,
+                              story_id = story,
+                              comment_body = comment_body)
+            
+            comment.save()
+            
+            # handle notification creation
+            if request_user != story.creator_id:
+                create_notification = UserStoryCommentedNotification(receiver = story.creator_id, source = story, comment = comment)
+                create_notification.save()
         
-def getStoryComments(request):
-    if request.method == "GET":
-        story_id = request.GET.get('story_id')
-        req_page = request.GET.get('page', 1)
         
-        get_comments = Comment.objects.filter(post=Post.objects.get(pk=int(story_id)), parent_comment = None).order_by('-date_created')
-        paginated_comments = Paginator(get_comments, per_page=10)
-        get_page = paginated_comments.get_page(req_page)
-        
-        payload = [elem.serializer() for elem in get_page.object_list]
-        
-        response = {
-            "page": {
-                "current": get_page.number,
-                "has_next": get_page.has_next(),
-                "has_previous": get_page.has_previous(),
-                "overall": paginated_comments.num_pages,
-            },
-            "stories": payload,
-        }
-        
-        return JsonResponse({"data": response})
+        story.comments_count += 1
+        story.save()   
+        return Response({"success": True, "data": {}, "message": "Comment created successfully"})
+
+class LikeUnlikeComment(APIView):
+    authentication_classes = (JWTAuthentication, )
+    permission_classes = (IsAuthenticated, )
     
-    if request.method == "POST":
-        data = request.POST
-
-        if request.user:
-            story = Post.objects.get(pk=int(data.get('post_id')))
-            
-            user = BaseUserProfile.objects.get(user = request.user)
-            create_comment = Comment(creator = user, post = story, comment_body = data.get('comment_body', 'Comment Body Lost'))
-            create_comment.save()
-        
-            story.comments_count += 1
-            story.save()
-            
-            return HttpResponseRedirect(data.get('next', '/'))
-        else:
-            return redirect('login')
-
-def LikeUnlikeComment(request):
-    if request.method == "POST":
-        data = json.loads(request.body)
-        comment_id = int(data.get('comment_id'))
+    def post(self, request):
+        data = request.data
+        comment_id = data.get('comment_id', None)
         sessionData = request.session.get('reactions')
-        submission_type = data.get('type')
-        get_comment = Comment.objects.get(pk = comment_id)
+        submission_type = data.get('type', None)
+
+        if comment_id == None or submission_type == None:
+            return Response({"success": False, "data": {}, "message": "request body missing comment_id or type (type should be 'like' or 'dislike')"})
         
+        get_comment = Comment.objects.get(pk = comment_id)
         if sessionData == None:
             request.session['reactions'] = {
                     'likes': {},
@@ -160,8 +180,11 @@ def LikeUnlikeComment(request):
                     get_comment.likes_count -= 1
                     get_comment.save()
                     sessionData['likes'].pop(str(comment_id), None)
-                
+        
+        else:
+            return Response({"success": False, "data": {}, "message": "Invalid type (type should be 'like' or 'dislike')"})
+        
         request.session['reactions'] = sessionData
         request.session.save()
 
-        return JsonResponse({"data": get_comment.serialize_update()}, safe=False)
+        return Response({"success": True, "data": ReactionCommentSerializer(get_comment).data, "message": ""})
