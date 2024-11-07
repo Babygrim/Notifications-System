@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'Authentication',
     'rest_framework',
     'rest_framework_simplejwt',
+    'drf_yasg',
     'rest_framework_simplejwt.token_blacklist',
     
 ]
@@ -165,6 +166,7 @@ CORS_ORIGIN_WHITELIST = (
 )
 
 SESSION_COOKIE_AGE = 1209600
+
 
 # CRONJOBS = [
 #     ('*/2 * * * *', 'Notifications.cron.clean_up_cron_job')
