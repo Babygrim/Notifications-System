@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('all', GetAllStories.as_view(), name='get_all_stories'),
-    path('create', ManipulateStory.as_view(), name='createstory'),
+    path('manipulate', ManipulateStory.as_view(), name='createstory'),
     path('get_genres', GetGenres.as_view(), name='genres'),
     path('get_tags', GetTags.as_view(), name='tags'),
     path('single', GetSingleStory.as_view(), name='story_page'),

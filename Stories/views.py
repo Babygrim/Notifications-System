@@ -96,9 +96,9 @@ class ManipulateStory(APIView):
         
         
         try:
-            genre = PostGenre.objects.get(pk = int(genre))
+            genre = PostGenre.objects.get(genre = genre)
         except PostGenre.DoesNotExist:
-            return Response({"success": False, "data": {}, "message": f"genre with id={genre} does not exist"}) 
+            return Response({"success": False, "data": {}, "message": f"genre with genre={genre} does not exist"}) 
         
         create_story = Post(creator_id = user.writer, post_title = title, post_text = body, genre=genre)
         create_story.save()
@@ -153,7 +153,7 @@ class ManipulateStory(APIView):
         tags = data.get('tags', None)
         
         if genre:
-            story.genre = PostGenre.objects.get(pk = int(genre))
+            story.genre = PostGenre.objects.get(genre = genre)
         
         if descr:
             story.post_description = descr
@@ -185,6 +185,25 @@ class ManipulateStory(APIView):
 
         story.save()
         return Response({"success": True, "data": {}, "message": "story updated successfully"})
+
+    def delete(self, request):
+        story_id = request.data.get("story_id", None)
+        
+        if story_id == None:
+            return Response({"success": False, "data": {}, "message": f"story_id is not passed in request body"})
+        
+        try:
+            post = Post.objects.get(pk = int(story_id))
+        except Post.DoesNotExist:
+            return Response({"success": False, "data": {}, "message": f"story with specified story_id={story_id} does not exist"})
+        
+        base_user = BaseUserProfile.objects.get(user = request.user)
+        
+        if post.creator_id == base_user.writer:
+            post.delete()
+            return Response({"success": True, "data": {}, "message": "story deleted successfully"})
+        else:
+            return Response({"success": True, "data": {}, "message": "you do not have permission to delete this story (you must be story creator)"})
 
 #Fetch all genres  
 class GetGenres(APIView):

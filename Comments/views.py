@@ -98,9 +98,13 @@ class CreateComments(APIView):
             if request_user != user_to_notify:
                 create_notification = UserCommentRepliedNotification(receiver = user_to_notify, source = reply_to_comment, parent_source = story)
                 create_notification.save()
-                
+            
+            story.comments_count += 1
+            story.save()   
+            return Response({"success": True, "data": {}, "message": "reply created successfully"})
+        
         # creating main comment
-        else:
+        elif story_id:
             try:
                 story = Post.objects.get(pk=int(story_id))
             except Post.DoesNotExist:
@@ -117,12 +121,36 @@ class CreateComments(APIView):
             if request_user != story.creator_id:
                 create_notification = UserStoryCommentedNotification(receiver = story.creator_id, source = story, comment = comment)
                 create_notification.save()
-        
-        
-        story.comments_count += 1
-        story.save()   
-        return Response({"success": True, "data": {}, "message": "Comment created successfully"})
 
+            story.comments_count += 1
+            story.save()   
+            return Response({"success": True, "data": {}, "message": "comment created successfully"})
+        
+        else:
+            print('хуй')
+        
+
+    def delete(self, request):
+        comment_id = request.data.get("comment_id", None)
+        
+        if comment_id == None:
+            return Response({"success": False, "data": {}, "message": f"comment_id is not passed in request body"})
+        
+        try:
+            comment = Comment.objects.get(pk = int(comment_id))
+        except Comment.DoesNotExist:
+            return Response({"success": False, "data": {}, "message": f"comment with specified comment_id={comment_id} does not exist"})
+        
+        base_user = BaseUserProfile.objects.get(user = request.user)
+        
+        if comment.story_id.creator_id ==  base_user.writer or comment.creator_id == base_user:
+            comment.delete()
+            return Response({"success": True, "data": {}, "message": "comment deleted successfully"})
+        else:
+            return Response({"success": True, "data": {}, "message": "you do not have permission to delete this comment (you must be comment creator or creator of the story that comment is related to)"})
+        
+    
+    
 #React to comment or reply
 class LikeUnlikeComment(APIView):
     authentication_classes = (JWTAuthentication, )
@@ -187,3 +215,6 @@ class LikeUnlikeComment(APIView):
         request.session.save()
 
         return Response({"success": True, "data": ReactionCommentSerializer(get_comment).data, "message": ""})
+
+    
+    
