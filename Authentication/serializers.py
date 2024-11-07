@@ -112,10 +112,3 @@ class ProfileSerializerForExtras(serializers.ModelSerializer):
         
     def get_username(self, obj):
         return obj.user.username
-    
-class NotifySerializer(serializers.ModelSerializer):
-    author_id = serializers.IntegerField()
-    
-    class Meta:
-        model = BaseUserProfile
-        fields = '__all__'
