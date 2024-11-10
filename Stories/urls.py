@@ -1,7 +1,5 @@
 from django.urls import path
 from .views import *
-from django.conf import settings
-from django.conf.urls.static import static
 
 urlpatterns = [
     path('all', GetAllStories.as_view(), name='get_all_stories'),
@@ -14,4 +12,4 @@ urlpatterns = [
     path('get_liked', GetLikedStories.as_view(), name='getlikes'),
     path('react', ReactToStory.as_view(), name='reaction'),
     
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]

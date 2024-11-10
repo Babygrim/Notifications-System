@@ -66,14 +66,17 @@ class ViewProfile(APIView):
     def get(self, request):
         user = request.GET.get('user', -1)
         
-        if request.user.is_authenticated and user == -1:
-            profile = BaseUserProfile.objects.get(user__id = request.user.id)
-            
-            return Response({'success': True, 'data': {"profile": ProfileSerializer(profile).data}, 'message': ''})
-        else:
-            profile = BaseUserProfile.objects.get(user__id = int(user))
-            
-            return Response({'success': True, 'data': {"profile": ProfileSerializerForOthers(profile).data}, 'message': ''})
+        try:
+            if request.user.is_authenticated and user == -1:
+                profile = BaseUserProfile.objects.get(user = request.user)
+                
+                return Response({'success': True, 'data': {"profile": ProfileSerializer(profile).data}, 'message': ''})
+            else:
+                profile = BaseUserProfile.objects.get(user__id = int(user))
+                
+                return Response({'success': True, 'data': {"profile": ProfileSerializerForOthers(profile).data}, 'message': ''})
+        except BaseUserProfile.DoesNotExist:
+            return Response({'success': False, 'data': {}, 'message': 'Profile for requested user does not exist'})
                      
     def patch(self, request):
         profile = BaseUserProfile.objects.get(user = request.user)

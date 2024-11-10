@@ -1,7 +1,5 @@
 from django.urls import path
 from .views import *
-from django.conf import settings
-from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
@@ -16,4 +14,4 @@ urlpatterns = [
     path('subscriptions', Subscriptions.as_view(), name="get_subs"),
     path('notify', NotificationsSetup.as_view(), name="get_notifications"),
     
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+]
