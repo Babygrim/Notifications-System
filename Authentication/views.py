@@ -1,5 +1,5 @@
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .serializers import MyTokenObtainPairSerializer, RegisterSerializer, ProfileSerializer, ProfileSerializerForOthers, WriterSerializer, NotifySerializer
+from .serializers import MyTokenObtainPairSerializer, RegisterSerializer, ProfileSerializer, ProfileSerializerForOthers, WriterSerializer
 from rest_framework import generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -187,7 +187,6 @@ class Subscriptions(APIView):
 class NotificationsSetup(APIView):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    serializer_class = NotifySerializer
     
     def post(self, request):
         data = request.data
