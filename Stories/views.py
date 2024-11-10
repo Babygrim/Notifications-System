@@ -24,7 +24,7 @@ class GetAllStories(APIView):
         req_page = int(request.GET.get('page', 1))
         search_prompt = request.GET.get('search_prompt', None)
         genres = request.GET.get('genres', None)
-        tags = request.GET.get('tag', None)
+        tags = request.GET.get('tags', None)
         sort_by = request.GET.get('sort_by', None)
         filter_conditions = []
         
