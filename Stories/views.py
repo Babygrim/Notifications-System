@@ -59,7 +59,7 @@ class GetAllStories(APIView):
         else:
             stories = Post.objects.filter(*filter_conditions).order_by(sort_by)[:100]
         
-        paginated_stories = Paginator(stories, per_page=10)
+        paginated_stories = Paginator(stories, per_page=20)
         get_page = paginated_stories.get_page(req_page)
         
 
@@ -215,7 +215,7 @@ class GetGenres(APIView):
         
         genres = PostGenre.objects.annotate(popularity = Count('post')).order_by(order_by)         #annotate(popularity = Count('post')).order_by('popularity')[:10]
         
-        paginated_tags = Paginator(genres, per_page=10)
+        paginated_tags = Paginator(genres, per_page=20)
         get_page = paginated_tags.get_page(req_page)
         
 
@@ -241,7 +241,7 @@ class GetTags(APIView):
         
         tags = PostTags.objects.annotate(popularity = Count('post')).order_by(order_by)        #annotate(popularity = Count('post')).order_by('popularity')[:10]
         
-        paginated_tags = Paginator(tags, per_page=10)
+        paginated_tags = Paginator(tags, per_page=20)
         get_page = paginated_tags.get_page(req_page)
         
 
@@ -267,7 +267,7 @@ class GetWriterStories(APIView):
         user = BaseUserProfile.objects.get(user = request.user)
         stories = Post.objects.filter(creator_id = user.writer)
         
-        paginated_stories = Paginator(stories, per_page=10)
+        paginated_stories = Paginator(stories, per_page=20)
         get_page = paginated_stories.get_page(req_page)
         
 
@@ -294,7 +294,7 @@ class GetViewHistory(APIView):
         
         get_viewed = UserViewedPosts.objects.get(reader=user.reader)
         
-        paginated_stories = Paginator(get_viewed.posts.all(), per_page=10)
+        paginated_stories = Paginator(get_viewed.posts.all(), per_page=20)
         get_page = paginated_stories.get_page(req_page)
         
 
@@ -473,7 +473,7 @@ class GetLikedStories(APIView):
         
         get_viewed = UserLikedPosts.objects.get(reader=user.reader)
         
-        paginated_stories = Paginator(get_viewed.posts.all(), per_page=10)
+        paginated_stories = Paginator(get_viewed.posts.all(), per_page=20)
         get_page = paginated_stories.get_page(req_page)
         
 

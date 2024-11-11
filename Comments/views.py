@@ -34,7 +34,7 @@ class GetComments(APIView):
             except Comment.DoesNotExist:
                 return Response({"success": False, "data": {}, "message": f'This story has no comments yet or story with id={story_id} does not exist'})
             
-            paginated = Paginator(get_all_comments, per_page=10)
+            paginated = Paginator(get_all_comments, per_page=20)
             get_page = paginated.get_page(req_page)
         
         else:
@@ -149,8 +149,6 @@ class CreateComments(APIView):
         else:
             return Response({"success": True, "data": {}, "message": "you do not have permission to delete this comment (you must be comment creator or creator of the story that comment is related to)"})
         
-    
-    
 #React to comment or reply
 class LikeUnlikeComment(APIView):
     authentication_classes = (JWTAuthentication, )

@@ -60,7 +60,7 @@ class GetNotifications(APIView):
         
         sorted_model_combination = sorted(model_combination, key=lambda obj: obj.created, reverse=True)
         
-        paginated_stories = Paginator(sorted_model_combination, per_page=5)
+        paginated_stories = Paginator(sorted_model_combination, per_page=10)
         get_page = paginated_stories.get_page(req_page)
         
         payload = [elem.serialize() for elem in get_page.object_list]
