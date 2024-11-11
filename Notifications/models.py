@@ -101,6 +101,14 @@ class MarkedAsRead(models.Model):
 @receiver(post_save, sender="Authentication.BaseUserProfile")
 def markRead(sender, instance, created, **kwargs):
     if created:
-        mark = MarkedAsRead(user = instance)
-        mark.save()
+        msg = "Server: "
+        try:
+            MarkedAsRead.objects.get(user = instance)
+            msg += "Marked as Read notifications instance already exists. "
+        except MarkedAsRead.DoesNotExist:
+            mark = MarkedAsRead(user = instance)
+            mark.save()
+            msg += "Marked as Read notifications instance created successfully. "
+        
+        print(msg)
         

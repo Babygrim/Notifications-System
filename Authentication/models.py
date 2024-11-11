@@ -39,9 +39,12 @@ class SubscriptionTimeStampThrough(models.Model):
 @receiver(post_save, sender=User)
 def user_created(sender, instance, created, **kwargs):
     if created:
-        reader = UserProfileReader()
-        reader.save()
-        
-        profile = BaseUserProfile(user=instance, reader = reader)
-        profile.save()        
-        print('Profile Created Successfully')
+        try:
+            BaseUserProfile.objects.get(user = instance)
+        except BaseUserProfile.DoesNotExist:
+            reader = UserProfileReader()
+            reader.save()
+            
+            profile = BaseUserProfile(user=instance, reader = reader)
+            profile.save()        
+            print('Server: Base and Reader profiles instances created successfully')

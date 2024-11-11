@@ -87,14 +87,26 @@ class UserViewedPosts(models.Model):
 
 @receiver(post_save, sender=BaseUserProfile)
 def user_created(sender, instance, created, **kwargs):
-    if created:        
-        views = UserViewedPosts(reader = instance.reader)
-        views.save()
+    if created:      
+        msg = "Server: "
         
-        liked = UserLikedPosts(reader = instance.reader)
-        liked.save()
+        try:
+            UserViewedPosts.objects.get(reader = instance.reader)
+            msg += "Viewed posts instances already exist. "
+        except UserViewedPosts.DoesNotExist:
+            viewed = UserViewedPosts(reader = instance.reader)
+            viewed.save()
+            msg += "Viewed posts instance created successfully. "
+            
+        try:
+            UserLikedPosts.objects.get(reader = instance.reader)
+            msg += "Liked posts instances already exist. "
+        except UserLikedPosts.DoesNotExist:
+            liked = UserLikedPosts(reader = instance.reader)
+            liked.save()
+            msg += "Liked posts instance created successfully. "
         
-        print('Profile Created Successfully')
+        print(msg)
         
 @receiver(post_save, sender=Post)
 def story_created(sender, instance, created, **kwargs):
@@ -102,6 +114,6 @@ def story_created(sender, instance, created, **kwargs):
         if UserProfileReader.objects.filter(subscribed_to = instance.creator_id).count() > 0:
             notification = UserStoryCreatedNotification(creator=instance.creator_id, source=instance)
             notification.save()
-            print("Writer has >0 Subscribers. Notification Created.")
+            print("Server: Writer has >0 Subscribers. Notification Created.")
         else:
-            print("Writer has 0 Subscribers. Notification Was Not Created")
+            print("Server: Writer has 0 Subscribers. Notification Was Not Created")
