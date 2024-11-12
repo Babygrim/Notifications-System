@@ -88,22 +88,39 @@ class ViewProfile(APIView):
         
         if profile.writer:
             if new_pseudo:
-                profile.writer.writer_pseudo = new_pseudo
-                profile.writer.save()
-                profile.save()
+                try:
+                    try_writer = UserProfileWriter(writer_pseudo = new_pseudo)
+                    return Response({"success": False, "data": {}, "message": "Writer with that pseudo already exists."})
+                except UserProfileWriter.DoesNotExist:
+                    profile.writer.writer_pseudo = new_pseudo
+                    profile.writer.save()
+                    profile.save()
+                    msg += "Updated user author pseudo. "
         else:
             msg = "User has no writer profile so skipping author_pseudo (if it was passed). "
 
         if new_avatar:
             profile.avatar = new_avatar
             profile.save()
-            msg += "Updated user avatar"
+            msg += "Updated user avatar. "
               
         if new_avatar == None and new_pseudo == None:
             return Response({"success": False, "data": {}, "message": 'Nothing was updated. Patchable parameters are "author_pseudo" and "avatar"'})
             
-        return Response({"success": True, "data": {}, "message": 'Profile updated successfully. ' + msg})
+        return Response({"success": True, "data": {"profile": ProfileSerializer(profile).data}, "message": 'Profile updated successfully. ' + msg})
    
+#Delete Account
+class DeleteAccount(APIView):
+    authentication_classes = (JWTAuthentication, )
+    permission_classes = (IsAuthenticated, )
+    
+    def delete(self, request):
+        try:
+            request.user.delete()
+            return Response({"success": True, "data": {}, "message":"User has been deleted"})
+        except BaseUserProfile.DoesNotExist:
+            return Response({"success": True, "data": {}, "message":"User for given credentials does not exist"})
+
 #Make BaseUser Writer Profile          
 class BecomeWriter(APIView):
     authentication_classes = (JWTAuthentication,)

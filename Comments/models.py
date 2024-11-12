@@ -7,7 +7,7 @@ from django.dispatch import receiver
 # Create your models here.
 
 class Comment(models.Model):
-    creator_id = models.ForeignKey(BaseUserProfile, on_delete=models.DO_NOTHING)
+    creator_id = models.ForeignKey(BaseUserProfile, on_delete=models.CASCADE)
     story_id = models.ForeignKey('Stories.Post', on_delete=models.CASCADE)
     comment_body = models.TextField(null = False)
     parent_comment_id = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True)
