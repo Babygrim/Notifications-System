@@ -274,9 +274,21 @@ class GetWriterStories(APIView):
     
     def get(self, request):
         req_page = int(request.GET.get('page', 1))
-        user = BaseUserProfile.objects.get(user = request.user)
-        stories = Post.objects.filter(creator_id = user.writer)
+        author_id = request.GET.get('author_id', None)
         
+        if author_id != None:
+            try:
+                stories = Post.objects.filter(creator_id__id = int(author_id))
+            except:
+                return Response({"success": False, "data": {}, "message": "Either author_id is not int or requested profile has no writer profile"})
+        else:
+            user = BaseUserProfile.objects.get(user = request.user)
+            
+            try:
+                stories = Post.objects.filter(creator_id = user.writer)
+            except:
+                return Response({"success": False, "data": {}, "message": "Requested profile has no writer profile"})
+            
         paginated_stories = Paginator(stories, per_page=20)
         get_page = paginated_stories.get_page(req_page)
         
