@@ -1,19 +1,15 @@
-from django.shortcuts import render
 from .models import *
 from django.db.models import Count, Case, When, IntegerField
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from Authentication.models import BaseUserProfile, SubscriptionTimeStampThrough
-import json
 from django.db.models import Q, Count, Case, When, IntegerField
 from statistics import median
-from django.shortcuts import redirect
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import StoriesSerializer, GenreSerializer, TagSerializer
+from .serializers import StoriesSerializer, GenreSerializer, TagSerializer, AllStorySerializer
 from .permissions import IsAuthenticatedWriter
 from functools import reduce
 import operator
@@ -80,7 +76,7 @@ class GetAllStories(APIView):
                     "has_next": get_page.has_next(),
                     "has_previous": get_page.has_previous(),
                 },
-                "stories": StoriesSerializer(get_page.object_list, many=True).data
+                "stories": AllStorySerializer(get_page.object_list, many=True).data
         }
         
         return Response({"success": True, "data": response, "message": ""})
@@ -162,20 +158,30 @@ class ManipulateStory(APIView):
         body = data.get('body', None)
         tags = data.get('tags', None)
         
+        msg = ""
+        
         if genre:
-            story.genre = PostGenre.objects.get(genre = genre)
+            try:
+                story.genre = PostGenre.objects.get(genre = genre)
+                msg += "Genre updated. "
+            except PostGenre.DoesNotExist:
+                msg += f"Genre with genre={genre} does not exist. "
         
         if descr:
             story.post_description = descr
+            msg += "Post description updated. "
         
         if image:
             story.post_image = image
+            msg += "Post image updated. "
         
         if title:
             story.post_title = title
+            msg += "Post title updated. "
         
         if body:
             story.post_text = body
+            msg += "Post text updated. "
         
         if tags:
             story.tags.clear()
@@ -184,9 +190,11 @@ class ManipulateStory(APIView):
             for tag in all_tags:
                 try:
                     get_tag = PostTags.objects.get(tag = tag)
+                    msg += f"Tag '{tag}' exists and was added. "
                 except PostTags.DoesNotExist:
                     get_tag = PostTags(tag = tag)
                     get_tag.save()
+                    msg += f"Tag '{tag}' does not exist. It was created and added. "
                 
                 all_tags_query.append(get_tag)
                 
@@ -194,7 +202,7 @@ class ManipulateStory(APIView):
                 story.tags.add(tag)
 
         story.save()
-        return Response({"success": True, "data": {}, "message": "story updated successfully"})
+        return Response({"success": True, "data": {}, "message": "Story updated successfully. " + msg})
 
     def delete(self, request):
         story_id = request.data.get("story_id", None)
@@ -300,7 +308,7 @@ class GetWriterStories(APIView):
                     "has_next": get_page.has_next(),
                     "has_previous": get_page.has_previous(),
                 },
-                "stories": StoriesSerializer(get_page.object_list, many=True).data
+                "stories": AllStorySerializer(get_page.object_list, many=True).data
         }
         
         return Response({"success": True, "data": response, "message": ""})
@@ -327,7 +335,7 @@ class GetViewHistory(APIView):
                 "has_next": get_page.has_next(),
                 "has_previous": get_page.has_previous(),
             },
-            "stories": StoriesSerializer(get_page.object_list, many=True).data
+            "stories": AllStorySerializer(get_page.object_list, many=True).data
         }
         
         return Response({"success": True, "data": response, "message": ""})
@@ -395,7 +403,7 @@ class GetSingleStory(APIView):
                 notified = False
         
         context = {
-            "story":StoriesSerializer(post).data,
+            "story": StoriesSerializer(post).data,
             "subscribed": check_subscription ,
             "owner": check_ownership,
             "authenticated": auth,
@@ -507,7 +515,7 @@ class GetLikedStories(APIView):
                 "has_next": get_page.has_next(),
                 "has_previous": get_page.has_previous(),
             },
-            "stories": StoriesSerializer(get_page.object_list, many=True).data
+            "stories": AllStorySerializer(get_page.object_list, many=True).data
         }
         
         return Response({"success": True, "data": response, "message": ""})

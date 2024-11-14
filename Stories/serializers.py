@@ -38,3 +38,23 @@ class StoriesSerializer(serializers.ModelSerializer):
         model = Post
         fields = ('__all__')
         
+class AllStorySerializer(serializers.ModelSerializer):
+    creator_id = WriterSerializer()
+    created = CustomDateTimeField()
+    genre = StoryMetaGenreSerializer()
+    tags = StoryMetaTagSerializer(many=True)
+    
+    class Meta:
+        model = Post
+        fields = ('id',
+                  'creator_id', 
+                  'post_image',
+                  'post_title',
+                  'post_description',
+                  'comments_count',
+                  'created',
+                  'likes_count',
+                  'dislikes_count',
+                  'views_counter',
+                  'genre',
+                  'tags')
