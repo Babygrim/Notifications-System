@@ -47,7 +47,7 @@ class GetComments(APIView):
                     "has_next": get_page.has_next(),
                     "has_previous": get_page.has_previous(),
                 },
-                "data": CommentSerializer(get_page.object_list, many=True).data
+                "data": CommentSerializer(get_page.object_list, many=True, context={'request': request}).data
         }
         return Response({"success": True, "data": response, "message": ''})
 
@@ -126,9 +126,6 @@ class CreateComments(APIView):
             story.save()   
             return Response({"success": True, "data": {}, "message": "comment created successfully"})
         
-        else:
-            print('хуй')
-        
 
     def delete(self, request):
         comment_id = request.data.get("comment_id", None)
@@ -173,8 +170,8 @@ class LikeUnlikeComment(APIView):
             sessionData = request.session.get('reactions')
         
         # work with sessionData variable
-        check_comment_liked = True if str(comment_id) in sessionData['likes'].keys() else False
-        check_comment_disliked = True if str(comment_id) in sessionData['dislikes'].keys() else False
+        check_comment_liked = str(comment_id) in sessionData['likes'].keys()
+        check_comment_disliked = str(comment_id) in sessionData['dislikes'].keys()
         
         if submission_type == 'like':
             if check_comment_liked:

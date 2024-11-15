@@ -364,16 +364,19 @@ class GetSingleStory(APIView):
         check_auth = False
         check_notified = False
         check_liked = False
+        check_disliked = False
         
         if request.user.is_authenticated:
             check_auth = True
-            sessionData = request.session.get('viewed')
+            sessionDataViewed = request.session.get('viewed')
+            sessionDataLiked = request.session.get('story_like_variable')
+            check_disliked = str(id) in sessionDataLiked['dislikes'].keys()
         
-            if sessionData == None:
+            if sessionDataViewed == None:
                 request.session['viewed'] = {}
                 request.session.save()
                 
-            sessionData = request.session.get('viewed')
+            sessionDataViewed = request.session.get('viewed')
             
             user_profile = BaseUserProfile.objects.get(user = request.user)
             check_subscription = post.creator_id in user_profile.reader.subscribed_to.all()
@@ -390,8 +393,8 @@ class GetSingleStory(APIView):
                     get_reader_posts.posts.add(post)
                     get_reader_posts.save()
                 else:
-                    if id not in sessionData.keys():
-                        sessionData.update({id: True})
+                    if id not in sessionDataViewed.keys():
+                        sessionDataViewed.update({id: True})
                         post.creator_id.total_story_views_counter += 1
                         post.views_counter += 1
                         post.save()
@@ -408,6 +411,7 @@ class GetSingleStory(APIView):
         context = {
             "story": StoriesSerializer(post).data,
             "liked": check_liked,
+            "disliked": check_disliked,  
             "subscribed": check_subscription,
             "owner": check_ownership,
             "authenticated": check_auth,
