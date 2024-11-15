@@ -89,7 +89,7 @@ class ViewProfile(APIView):
         if profile.writer:
             if new_pseudo:
                 try:
-                    try_writer = UserProfileWriter(writer_pseudo = new_pseudo)
+                    try_writer = UserProfileWriter.objects.get(writer_pseudo = new_pseudo)
                     return Response({"success": False, "data": {}, "message": "Writer with that pseudo already exists."})
                 except UserProfileWriter.DoesNotExist:
                     profile.writer.writer_pseudo = new_pseudo
@@ -102,7 +102,7 @@ class ViewProfile(APIView):
         if new_avatar:
             profile.avatar = new_avatar
             profile.save()
-            msg += "Updated user avatar. "
+            msg += "Updated user avatar."
               
         if new_avatar == None and new_pseudo == None:
             return Response({"success": False, "data": {}, "message": 'Nothing was updated. Patchable parameters are "author_pseudo" and "avatar"'})

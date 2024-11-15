@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from TestProject.serializers import CustomDateTimeField
-from Authentication.serializers import WriterSerializer
+from Authentication.serializers import ProfileSerializer
 from .models import Post, PostGenre, PostTags
+from Authentication.models import BaseUserProfile
 
 class GenreSerializer(serializers.ModelSerializer):
     popularity = serializers.IntegerField()
@@ -29,7 +30,7 @@ class StoryMetaTagSerializer(serializers.ModelSerializer):
         fields = ('__all__')
         
 class StoriesSerializer(serializers.ModelSerializer):
-    creator_id = WriterSerializer()
+    creator_id = serializers.SerializerMethodField()
     created = CustomDateTimeField()
     genre = StoryMetaGenreSerializer()
     tags = StoryMetaTagSerializer(many=True)
@@ -38,8 +39,12 @@ class StoriesSerializer(serializers.ModelSerializer):
         model = Post
         fields = ('__all__')
         
+    def get_creator_id(self, obj):
+        print(obj)
+        return ProfileSerializer(BaseUserProfile.objects.get(writer = obj.creator_id)).data
+         
 class AllStorySerializer(serializers.ModelSerializer):
-    creator_id = WriterSerializer()
+    creator_id = serializers.SerializerMethodField()
     created = CustomDateTimeField()
     genre = StoryMetaGenreSerializer()
     tags = StoryMetaTagSerializer(many=True)
@@ -58,3 +63,6 @@ class AllStorySerializer(serializers.ModelSerializer):
                   'views_counter',
                   'genre',
                   'tags')
+    
+    def get_creator_id(self, obj):
+        return ProfileSerializer(BaseUserProfile.objects.get(writer = obj.creator_id)).data
