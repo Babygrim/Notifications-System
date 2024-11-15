@@ -361,11 +361,12 @@ class GetSingleStory(APIView):
         check_ownership = False
         
         #highlight = request.GET.get('comment', None)
-        auth = False
-        notified = False
+        check_auth = False
+        check_notified = False
+        check_liked = False
         
         if request.user.is_authenticated:
-            auth = True
+            check_auth = True
             sessionData = request.session.get('viewed')
         
             if sessionData == None:
@@ -382,6 +383,8 @@ class GetSingleStory(APIView):
 
             if check_ownership == False:
                 get_reader_posts = UserViewedPosts.objects.get(reader=user_profile.reader)
+                get_reader_liked = UserLikedPosts.objects.get(reader =user_profile.reader)
+                check_liked = post in get_reader_liked.posts.all()
 
                 if post not in get_reader_posts.posts.all():
                     get_reader_posts.posts.add(post)
@@ -398,16 +401,17 @@ class GetSingleStory(APIView):
                         request.session.save()
 
             try:
-                notified = SubscriptionTimeStampThrough.objects.get(writer = post.creator_id, reader = user_profile.reader).receive_notifications
+                check_notified = SubscriptionTimeStampThrough.objects.get(writer = post.creator_id, reader = user_profile.reader).receive_notifications
             except SubscriptionTimeStampThrough.DoesNotExist:
-                notified = False
+                check_notified = False
         
         context = {
             "story": StoriesSerializer(post).data,
-            "subscribed": check_subscription ,
+            "liked": check_liked,
+            "subscribed": check_subscription,
             "owner": check_ownership,
-            "authenticated": auth,
-            "get_notifications": notified, 
+            "authenticated": check_auth,
+            "get_notifications": check_notified, 
         }
 
         return Response({"success": True, "data": context, "message": ""})
