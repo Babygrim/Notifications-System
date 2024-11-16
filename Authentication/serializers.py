@@ -61,6 +61,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     reader = ReaderSerializer()
     writer = WriterSerializer()
     notifications_num = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
     
     class Meta:
         model = BaseUserProfile
@@ -95,16 +96,24 @@ class ProfileSerializer(serializers.ModelSerializer):
         total += notificationMod.UserCommentRepliedNotification.objects.filter(receiver = obj).exclude(id__in=cr_ids).count()
         
         return total
-         
+
+    def get_avatar(self, obj):
+        return obj.avatar.url
+
 class ProfileSerializerForOthers(serializers.ModelSerializer):
     writer = WriterSerializer()
+    avatar = serializers.SerializerMethodField()
     
     class Meta:
         model = BaseUserProfile
         fields = ('avatar', 'is_premium', 'writer')
 
+    def get_avatar(self, obj):
+        return obj.avatar.url
+    
 class ProfileSerializerForExtras(serializers.ModelSerializer):
     username = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
     
     class Meta:
         model = BaseUserProfile
@@ -112,3 +121,6 @@ class ProfileSerializerForExtras(serializers.ModelSerializer):
         
     def get_username(self, obj):
         return obj.user.username
+
+    def get_avatar(self, obj):
+        return obj.avatar.url

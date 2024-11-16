@@ -34,6 +34,7 @@ class StoriesSerializer(serializers.ModelSerializer):
     created = CustomDateTimeField()
     genre = StoryMetaGenreSerializer()
     tags = StoryMetaTagSerializer(many=True)
+    post_image = serializers.SerializerMethodField()
     
     class Meta:
         model = Post
@@ -42,12 +43,16 @@ class StoriesSerializer(serializers.ModelSerializer):
     def get_creator_id(self, obj):
         print(obj)
         return ProfileSerializer(BaseUserProfile.objects.get(writer = obj.creator_id)).data
+    
+    def get_post_image(self, obj):
+        return obj.post_image.url
          
 class AllStorySerializer(serializers.ModelSerializer):
     creator_id = serializers.SerializerMethodField()
     created = CustomDateTimeField()
     genre = StoryMetaGenreSerializer()
     tags = StoryMetaTagSerializer(many=True)
+    post_image = serializers.SerializerMethodField()
     
     class Meta:
         model = Post
@@ -66,3 +71,6 @@ class AllStorySerializer(serializers.ModelSerializer):
     
     def get_creator_id(self, obj):
         return ProfileSerializer(BaseUserProfile.objects.get(writer = obj.creator_id)).data
+    
+    def get_post_image(self, obj):
+        return obj.post_image.url

@@ -9,10 +9,11 @@ class CommentSerializer(serializers.ModelSerializer):
     replies_count = serializers.SerializerMethodField()
     liked = serializers.SerializerMethodField()
     disliked = serializers.SerializerMethodField()
+    creator_is_story_author = serializers.SerializerMethodField()
     
     class Meta:
         model = Comment
-        fields = ('id', 'created', 'comment_body', 'likes_count', 'dislikes_count', 'replies_count', 'creator_id', 'story_id', 'parent_comment_id', 'liked', 'disliked')
+        fields = ('id', 'created', 'comment_body', 'likes_count', 'dislikes_count', 'replies_count', 'creator_id', 'story_id', 'parent_comment_id', 'liked', 'disliked', 'creator_is_story_author')
         
     def get_replies_count(self, obj):
         # This will count all books related to this author
@@ -29,6 +30,9 @@ class CommentSerializer(serializers.ModelSerializer):
         sessionData = request.session.get('reactions')
 
         return str(obj.id) in sessionData['dislikes'].keys()
+    
+    def get_creator_is_story_author(self, obj):
+        return obj.creator_id.writer == obj.story_id.creator_id
     
 class ReactionCommentSerializer(CommentSerializer):
 

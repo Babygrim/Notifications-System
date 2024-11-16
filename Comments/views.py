@@ -7,6 +7,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import CommentSerializer, ReactionCommentSerializer
+from django.db.models.lookups import Exact
 
 #Fetch comments or replies for comment
 class GetComments(APIView):
@@ -19,22 +20,31 @@ class GetComments(APIView):
         
         # meaning get replies else - get main comments
         if comment_id:
-            parent_comment = Comment.objects.get(pk = int(comment_id))
             try:
-                get_all_replies = Comment.objects.filter(parent_comment_id = parent_comment).order_by('created')
+                parent_comment = Comment.objects.get(pk = int(comment_id))
             except Comment.DoesNotExist:
-                return Response({"success": False, "data": {}, "message": 'Parent comment does not exist'})
+                return Response({"success": False, "data": {}, "message": f'Parent comment with id={comment_id} does not exist'})
             
+            get_all_replies = Comment.objects.filter(parent_comment_id = parent_comment).order_by('created')
             paginated = Paginator(get_all_replies, per_page=10)
             get_page = paginated.get_page(req_page)
         
         elif story_id:
             try:
-                get_all_comments = Comment.objects.filter(story_id = int(story_id), parent_comment_id = None)
+                story = Post.objects.get(pk = int(story_id))
             except Comment.DoesNotExist:
-                return Response({"success": False, "data": {}, "message": f'This story has no comments yet or story with id={story_id} does not exist'})
+                return Response({"success": False, "data": {}, "message": f'Story with id={story_id} does not exist'})
             
-            paginated = Paginator(get_all_comments, per_page=20)
+            base_user_by_author = BaseUserProfile.objects.get(writer = story.creator_id)
+            
+            # make story-author comments appear first
+            author_comments = Comment.objects.filter(creator_id = base_user_by_author, parent_comment_id = None).order_by("created")
+            get_all_comments = Comment.objects.filter(story_id = story, parent_comment_id = None).exclude(creator_id = base_user_by_author)
+            
+            # combined
+            comments = author_comments | get_all_comments
+            
+            paginated = Paginator(comments, per_page=20)
             get_page = paginated.get_page(req_page)
         
         else:
@@ -210,6 +220,3 @@ class LikeUnlikeComment(APIView):
         request.session.save()
 
         return Response({"success": True, "data": ReactionCommentSerializer(get_comment).data, "message": ""})
-
-    
-    
