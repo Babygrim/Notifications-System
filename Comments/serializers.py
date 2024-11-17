@@ -21,13 +21,13 @@ class CommentSerializer(serializers.ModelSerializer):
 
     def get_liked(self, obj):
         request = self.context.get('request')
-        sessionData = request.session.get('reactions')
+        sessionData = request.session.get('comment_like_variable')
         
         return str(obj.id) in sessionData['likes'].keys()
     
     def get_disliked(self, obj):
         request = self.context.get('request')
-        sessionData = request.session.get('reactions')
+        sessionData = request.session.get('comment_like_variable')
 
         return str(obj.id) in sessionData['dislikes'].keys()
     

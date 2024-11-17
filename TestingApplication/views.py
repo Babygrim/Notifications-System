@@ -130,7 +130,7 @@ class DeleteSession(APIView):
     permission_classes = (AllowAny,)
     
     def get(self, request):
-        keys = ["viewed", "story_like_variable", "comment_like_variable"]
+        keys = ["viewed", "story_like_variable", "comment_like_variable", "reactions"]
         
         for key in keys:
             try:
