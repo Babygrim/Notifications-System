@@ -6,7 +6,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import CommentSerializer, ReactionCommentSerializer
+from .serializers import CommentSerializer
 
 #Fetch comments or replies for comment
 class GetComments(APIView):
@@ -16,13 +16,6 @@ class GetComments(APIView):
         comment_id = request.GET.get('parent_comment_id', None)
         story_id = request.GET.get('story_id', None)
         req_page = request.GET.get('page', 1)
-        sessionData = request.session.get('comment_like_variable')
-        if sessionData == None:
-            request.session['comment_like_variable'] = {
-                    'likes': {},
-                    'dislikes': {},
-                }
-            request.session.save()
         
         # meaning get replies else - get main comments
         if comment_id:
@@ -170,59 +163,30 @@ class LikeUnlikeComment(APIView):
     def post(self, request):
         data = request.data
         comment_id = data.get('comment_id', None)
-        sessionData = request.session.get('comment_like_variable')
         submission_type = data.get('type', None)
-
+        base_user = BaseUserProfile.objects.get(user = request.user)
+    
         if comment_id == None or submission_type == None:
             return Response({"success": False, "data": {}, "message": "request body missing comment_id or type (type should be 'like' or 'dislike')"})
         
-        get_comment = Comment.objects.get(pk = comment_id)
-        if sessionData == None:
-            request.session['comment_like_variable'] = {
-                    'likes': {},
-                    'dislikes': {},
-                }
-            request.session.save()
-            sessionData = request.session.get('comment_like_variable')
-        
-        # work with sessionData variable
-        check_comment_liked = str(comment_id) in sessionData['likes'].keys()
-        check_comment_disliked = str(comment_id) in sessionData['dislikes'].keys()
-        
+        try:
+            get_comment = Comment.objects.get(pk = comment_id)
+        except Comment.DoesNotExist:
+            return Response({"success": False, "data": {}, "message": f"comment with id={comment_id} does not exist."})
+            
         if submission_type == 'like':
-            if check_comment_liked:
-                get_comment.likes_count -= 1
-                get_comment.save()
-                sessionData['likes'].pop(str(comment_id), None)
+            if base_user in get_comment.likes.all():
+                get_comment.likes.remove(base_user)
             else:
-                get_comment.likes_count += 1
-                get_comment.save()
-                sessionData['likes'].update({comment_id: True})
-                
-                if check_comment_disliked:
-                    get_comment.dislikes_count -= 1
-                    get_comment.save()
-                    sessionData['dislikes'].pop(str(comment_id), None)
-                            
+                get_comment.likes.add(base_user)
         elif submission_type == 'dislike':
-            if check_comment_disliked:
-                get_comment.dislikes_count -= 1
-                get_comment.save()
-                sessionData['dislikes'].pop(str(comment_id), None)
+            if base_user in get_comment.dislikes.all():
+                get_comment.dislikes.remove(base_user)
             else:
-                get_comment.dislikes_count += 1
-                get_comment.save()
-                sessionData['dislikes'].update({comment_id: True})
-                
-                if check_comment_liked:
-                    get_comment.likes_count -= 1
-                    get_comment.save()
-                    sessionData['likes'].pop(str(comment_id), None)
-        
+                get_comment.dislikes.add(base_user) 
         else:
             return Response({"success": False, "data": {}, "message": "Invalid type (type should be 'like' or 'dislike')"})
-        
-        request.session['reactions'] = sessionData
-        request.session.save()
 
-        return Response({"success": True, "data": ReactionCommentSerializer(get_comment).data, "message": ""})
+        get_comment.save()
+
+        return Response({"success": True, "data": CommentSerializer(get_comment, context={'request': request}).data, "message": ""})
