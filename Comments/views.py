@@ -175,11 +175,17 @@ class LikeUnlikeComment(APIView):
             return Response({"success": False, "data": {}, "message": f"comment with id={comment_id} does not exist."})
             
         if submission_type == 'like':
+            if base_user in get_comment.dislikes.all():
+                get_comment.dislikes.remove(base_user)
+                
             if base_user in get_comment.likes.all():
                 get_comment.likes.remove(base_user)
             else:
                 get_comment.likes.add(base_user)
         elif submission_type == 'dislike':
+            if base_user in get_comment.likes.all():
+                get_comment.likes.remove(base_user)
+                
             if base_user in get_comment.dislikes.all():
                 get_comment.dislikes.remove(base_user)
             else:
@@ -188,5 +194,4 @@ class LikeUnlikeComment(APIView):
             return Response({"success": False, "data": {}, "message": "Invalid type (type should be 'like' or 'dislike')"})
 
         get_comment.save()
-
         return Response({"success": True, "data": CommentSerializer(get_comment, context={'request': request}).data, "message": ""})

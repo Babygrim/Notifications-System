@@ -63,8 +63,13 @@ class GetAllStories(APIView):
            
             #stories = stories.filter(filter_conditions).order_by("-num_matches")
         else:
-            stories = Post.objects.filter(filter_conditions).order_by(sort_by)
-        
+            if sort_by == 'likes_count' or sort_by == '-likes_count':
+                stories = Post.objects.filter(filter_conditions).annotate(likes_count = Count('likes')).order_by(sort_by)
+            elif sort_by == 'views_counter' or sort_by == '-views_counter':
+                stories = Post.objects.filter(filter_conditions).annotate(views_counter = Count('views')).order_by(sort_by)
+            else:
+                stories = Post.objects.filter(filter_conditions).order_by(sort_by)
+             
         paginated_stories = Paginator(stories, per_page=20)
         get_page = paginated_stories.get_page(req_page)
         
@@ -320,7 +325,7 @@ class GetViewHistory(APIView):
         
         get_viewed = Post.objects.filter(views = base_user)
         
-        paginated_stories = Paginator(get_viewed.posts.all(), per_page=20)
+        paginated_stories = Paginator(get_viewed, per_page=20)
         get_page = paginated_stories.get_page(req_page)
         
 
@@ -364,10 +369,13 @@ class GetSingleStory(APIView):
         
         if request.user.is_authenticated:
             check_auth = True
-
             user_profile = BaseUserProfile.objects.get(user = request.user)
             check_subscription = post.creator_id in user_profile.reader.subscribed_to.all()
             
+            if user_profile not in post.views.all():
+                post.views.add(user_profile)
+                post.save()
+                
             if user_profile.writer:
                 check_ownership = post.creator_id == user_profile.writer
 
@@ -409,24 +417,38 @@ class ReactToStory(APIView):
         
         if user.writer:
             if user.writer == story.creator_id:
-                return JsonResponse({"success": False, 'reactions': {'likes': story.likes_count, 'dislikes':story.dislikes_count}, 'reason': "You cannot like or dislike your own stories"}) 
+                return JsonResponse({"success": False, 'data': {}, 'reason': "You cannot like or dislike your own stories"}) 
         
         react_type = data.get('type', None)
         if react_type == None:
             return Response({"success": False, "data": {}, "message": "No type was provided ('like' or 'dislike' is required)"})
         
-        string_story_id = str(story_id)
-        
-        
         if react_type == 'like':  
-            pass
+            if user in story.dislikes.all():
+                story.dislikes.remove(user)
+                
+            if user in story.likes.all():
+                story.likes.remove(user)
+                msg = "Story like removed."
+            else:
+                story.likes.add(user)
+                msg = "Story like added."
         elif react_type == 'dislike':
-            pass
+            if user in story.likes.all():
+                story.likes.remove(user)
+            
+            if user in story.dislikes.all():
+                story.dislikes.remove(user)
+                msg = "Story dislike removed."
+            else:
+                story.dislikes.add(user)
+                msg = "Story dislike added."
         else:
             return Response({"success": False, "data": {}, "message": "Invalid type provided ('like' or 'dislike' is required)"})       
                     
         #print(sessionData)
-        return Response({"success": True, "data": {'likes': story.likes_count, 'dislikes':story.dislikes_count}, "message": ""})   
+        story.save()
+        return Response({"success": True, "data": StoriesSerializer(story).data, "message": msg})   
 
 #Fetch Liked Stories
 class GetLikedStories(APIView):
@@ -439,7 +461,7 @@ class GetLikedStories(APIView):
         
         get_liked = Post.objects.filter(likes = base_user)
         
-        paginated_stories = Paginator(get_liked.posts.all(), per_page=20)
+        paginated_stories = Paginator(get_liked, per_page=20)
         get_page = paginated_stories.get_page(req_page)
         
 

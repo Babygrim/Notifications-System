@@ -1,8 +1,7 @@
 from rest_framework import serializers
 from TestProject.serializers import CustomDateTimeField
-from Authentication.serializers import ProfileSerializer
+from Authentication.serializers import WriterSerializer
 from .models import Post, PostGenre, PostTags
-from Authentication.models import BaseUserProfile
 
 class GenreSerializer(serializers.ModelSerializer):
     popularity = serializers.IntegerField()
@@ -35,16 +34,29 @@ class StoriesSerializer(serializers.ModelSerializer):
     genre = StoryMetaGenreSerializer()
     tags = StoryMetaTagSerializer(many=True)
     post_image = serializers.SerializerMethodField()
+    
     likes_count = serializers.SerializerMethodField()
     dislikes_count = serializers.SerializerMethodField()
     views_count = serializers.SerializerMethodField()
     
     class Meta:
         model = Post
-        fields = ('__all__')
+        fields = ('id',
+                  'creator_id',
+                  'post_image',
+                  'post_title',
+                  'post_text',
+                  'post_description',
+                  'created',
+                  'genre',
+                  'tags',
+                  'post_image',
+                  'likes_count',
+                  'dislikes_count',
+                  'views_count')
         
     def get_creator_id(self, obj):
-        return ProfileSerializer(BaseUserProfile.objects.get(writer = obj.creator_id)).data
+        return WriterSerializer(obj.creator_id).data
     
     def get_post_image(self, obj):
         return obj.post_image.url
@@ -75,7 +87,6 @@ class AllStorySerializer(serializers.ModelSerializer):
                   'post_image',
                   'post_title',
                   'post_description',
-                  'comments_count',
                   'created',
                   'likes_count',
                   'dislikes_count',
@@ -84,7 +95,7 @@ class AllStorySerializer(serializers.ModelSerializer):
                   'tags')
     
     def get_creator_id(self, obj):
-        return ProfileSerializer(BaseUserProfile.objects.get(writer = obj.creator_id)).data
+        return WriterSerializer(obj.creator_id).data
     
     def get_post_image(self, obj):
         return obj.post_image.url
