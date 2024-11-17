@@ -64,9 +64,9 @@ class GetAllStories(APIView):
             #stories = stories.filter(filter_conditions).order_by("-num_matches")
         else:
             if sort_by == 'likes_count' or sort_by == '-likes_count':
-                stories = Post.objects.filter(filter_conditions).annotate(likes_count = Count('likes')).order_by(sort_by)
+                stories = Post.objects.filter(filter_conditions).alias(likes_count = Count('likes')).order_by(sort_by)
             elif sort_by == 'views_counter' or sort_by == '-views_counter':
-                stories = Post.objects.filter(filter_conditions).annotate(views_counter = Count('views')).order_by(sort_by)
+                stories = Post.objects.filter(filter_conditions).alias(views_counter = Count('views')).order_by(sort_by)
             else:
                 stories = Post.objects.filter(filter_conditions).order_by(sort_by)
              

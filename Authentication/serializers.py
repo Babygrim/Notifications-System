@@ -49,13 +49,13 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 class ReaderSerializer(serializers.ModelSerializer):
-    # total_stories_viewed = serializers.SerializerMethodField()
-    # total_stories_liked = serializers.SerializerMethodField()
-    # total_stories_disliked = serializers.SerializerMethodField()
+    total_stories_viewed = serializers.SerializerMethodField()
+    total_stories_liked = serializers.SerializerMethodField()
+    total_stories_disliked = serializers.SerializerMethodField()
     
-    # total_comments_made = serializers.SerializerMethodField()
-    # total_comments_liked = serializers.SerializerMethodField()
-    # total_comments_disliked = serializers.SerializerMethodField()
+    total_comments_made = serializers.SerializerMethodField()
+    total_comments_liked = serializers.SerializerMethodField()
+    total_comments_disliked = serializers.SerializerMethodField()
     
     total_subscriptions = serializers.SerializerMethodField()
     
@@ -98,10 +98,10 @@ class ReaderSerializer(serializers.ModelSerializer):
         return obj.subscribed_to.all().count()
         
 class WriterSerializer(serializers.ModelSerializer):
-    # total_stories_made = serializers.SerializerMethodField()
+    total_stories_made = serializers.SerializerMethodField()
     total_story_views = serializers.SerializerMethodField()
-    # total_story_likes = serializers.SerializerMethodField()
-    # total_story_dislikes = serializers.SerializerMethodField()
+    total_story_likes = serializers.SerializerMethodField()
+    total_story_dislikes = serializers.SerializerMethodField()
     total_subscribers = serializers.SerializerMethodField()
     
     class Meta:
@@ -194,3 +194,8 @@ class ProfileSerializerForExtras(serializers.ModelSerializer):
 
     def get_avatar(self, obj):
         return obj.avatar.url
+    
+class AllStoryWriterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfileWriter
+        fields = ('id', 'writer_pseudo')

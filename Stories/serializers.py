@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from TestProject.serializers import CustomDateTimeField
-from Authentication.serializers import WriterSerializer
+from Authentication.serializers import AllStoryWriterSerializer
 from .models import Post, PostGenre, PostTags
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -29,7 +29,7 @@ class StoryMetaTagSerializer(serializers.ModelSerializer):
         fields = ('__all__')
         
 class StoriesSerializer(serializers.ModelSerializer):
-    creator_id = serializers.SerializerMethodField()
+    creator_id = AllStoryWriterSerializer
     created = CustomDateTimeField()
     genre = StoryMetaGenreSerializer()
     tags = StoryMetaTagSerializer(many=True)
@@ -55,9 +55,6 @@ class StoriesSerializer(serializers.ModelSerializer):
                   'dislikes_count',
                   'views_count')
         
-    def get_creator_id(self, obj):
-        return WriterSerializer(obj.creator_id).data
-    
     def get_post_image(self, obj):
         return obj.post_image.url
     
@@ -71,11 +68,12 @@ class StoriesSerializer(serializers.ModelSerializer):
         return obj.views.all().count()
          
 class AllStorySerializer(serializers.ModelSerializer):
-    creator_id = serializers.SerializerMethodField()
+    creator_id = AllStoryWriterSerializer()
     created = CustomDateTimeField()
     genre = StoryMetaGenreSerializer()
     tags = StoryMetaTagSerializer(many=True)
     post_image = serializers.SerializerMethodField()
+    
     likes_count = serializers.SerializerMethodField()
     dislikes_count = serializers.SerializerMethodField()
     views_count = serializers.SerializerMethodField()
@@ -84,19 +82,16 @@ class AllStorySerializer(serializers.ModelSerializer):
         model = Post
         fields = ('id',
                   'creator_id', 
+                  'created',
                   'post_image',
                   'post_title',
                   'post_description',
-                  'created',
                   'likes_count',
                   'dislikes_count',
                   'views_count',
                   'genre',
                   'tags')
-    
-    def get_creator_id(self, obj):
-        return WriterSerializer(obj.creator_id).data
-    
+        
     def get_post_image(self, obj):
         return obj.post_image.url
     
