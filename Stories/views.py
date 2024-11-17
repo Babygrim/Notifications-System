@@ -368,15 +368,24 @@ class GetSingleStory(APIView):
         
         if request.user.is_authenticated:
             check_auth = True
+            
+            sessionDataViewed = request.session.get('viewed')
+            if sessionDataViewed == None:
+                request.session['viewed'] = {}
+                request.session.save()
+            
+            sessionDataLiked = request.session.get('story_like_variable')
+            if sessionDataLiked == None:
+                request.session['story_like_variable'] = {
+                        'dislikes': {},
+                    }
+                request.session.save()
+            
             sessionDataViewed = request.session.get('viewed')
             sessionDataLiked = request.session.get('story_like_variable')
             check_disliked = str(id) in sessionDataLiked['dislikes'].keys()
         
-            if sessionDataViewed == None:
-                request.session['viewed'] = {}
-                request.session.save()
                 
-            sessionDataViewed = request.session.get('viewed')
             
             user_profile = BaseUserProfile.objects.get(user = request.user)
             check_subscription = post.creator_id in user_profile.reader.subscribed_to.all()

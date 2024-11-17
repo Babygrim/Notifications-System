@@ -7,7 +7,6 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import CommentSerializer, ReactionCommentSerializer
-from django.db.models.lookups import Exact
 
 #Fetch comments or replies for comment
 class GetComments(APIView):
@@ -17,6 +16,13 @@ class GetComments(APIView):
         comment_id = request.GET.get('parent_comment_id', None)
         story_id = request.GET.get('story_id', None)
         req_page = request.GET.get('page', 1)
+        sessionData = request.session.get('comment_like_variable')
+        if sessionData == None:
+            request.session['comment_like_variable'] = {
+                    'likes': {},
+                    'dislikes': {},
+                }
+            request.session.save()
         
         # meaning get replies else - get main comments
         if comment_id:
@@ -38,7 +44,7 @@ class GetComments(APIView):
             base_user_by_author = BaseUserProfile.objects.get(writer = story.creator_id)
             
             # make story-author comments appear first
-            author_comments = Comment.objects.filter(creator_id = base_user_by_author, parent_comment_id = None).order_by("created")
+            author_comments = Comment.objects.filter(creator_id = base_user_by_author, story_id = story, parent_comment_id = None).order_by("created")
             get_all_comments = Comment.objects.filter(story_id = story, parent_comment_id = None).exclude(creator_id = base_user_by_author)
             
             # combined
@@ -164,7 +170,7 @@ class LikeUnlikeComment(APIView):
     def post(self, request):
         data = request.data
         comment_id = data.get('comment_id', None)
-        sessionData = request.session.get('reactions')
+        sessionData = request.session.get('comment_like_variable')
         submission_type = data.get('type', None)
 
         if comment_id == None or submission_type == None:
@@ -172,12 +178,12 @@ class LikeUnlikeComment(APIView):
         
         get_comment = Comment.objects.get(pk = comment_id)
         if sessionData == None:
-            request.session['reactions'] = {
+            request.session['comment_like_variable'] = {
                     'likes': {},
                     'dislikes': {},
                 }
             request.session.save()
-            sessionData = request.session.get('reactions')
+            sessionData = request.session.get('comment_like_variable')
         
         # work with sessionData variable
         check_comment_liked = str(comment_id) in sessionData['likes'].keys()

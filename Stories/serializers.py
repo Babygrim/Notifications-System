@@ -41,7 +41,6 @@ class StoriesSerializer(serializers.ModelSerializer):
         fields = ('__all__')
         
     def get_creator_id(self, obj):
-        print(obj)
         return ProfileSerializer(BaseUserProfile.objects.get(writer = obj.creator_id)).data
     
     def get_post_image(self, obj):

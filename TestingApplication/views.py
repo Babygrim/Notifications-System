@@ -121,4 +121,22 @@
 #             "ao_notifications": numb_of_admin_notifications,
 #             "cr_notifications": numb_of_comment_replied_notifications,
 #         })
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny, IsAuthenticated
+
+class DeleteSession(APIView):
+    permission_classes = (AllowAny,)
+    
+    def get(self, request):
+        keys = ["viewed", "story_like_variable", "comment_like_variable"]
         
+        for key in keys:
+            try:
+                print(f"Server: Deleting {key} from session.")
+                del request.session[key]
+            except KeyError:
+                print(f"Server: {key} does not exist.")
+
+        return Response({"success": True, "data":{}, "message":"My session data should be erased."})
