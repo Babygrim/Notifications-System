@@ -116,19 +116,15 @@ class ManipulateStory(APIView):
             create_story.post_image = image
         
         if tags:
-            all_tags_query = []
             all_tags = tags.split(',')[:-1]
             for tag in all_tags:
                 try:
-                    get_tag = PostTags.objects.filter(tag = tag)
+                    get_tag = PostTags.objects.get(tag = tag)
                 except PostTags.DoesNotExist:
                     get_tag = PostTags(tag = tag)
                 
-                all_tags_query.append(get_tag)
+                create_story.tags.add(get_tag)
                 
-            for tag in all_tags_query:
-                create_story.tags.add(tag)
-        
         create_story.save()
         
         return Response({"success": True, "data": {}, "message": "story created successfully"})
@@ -320,9 +316,9 @@ class GetViewHistory(APIView):
     
     def get(self, request):
         req_page = int(request.GET.get('page', 1))
-        user = BaseUserProfile.objects.get(user = request.user)
+        base_user = BaseUserProfile.objects.get(user = request.user)
         
-        get_viewed = UserViewedPosts.objects.get(reader=user.reader)
+        get_viewed = Post.objects.filter(views = base_user)
         
         paginated_stories = Paginator(get_viewed.posts.all(), per_page=20)
         get_page = paginated_stories.get_page(req_page)
@@ -368,49 +364,12 @@ class GetSingleStory(APIView):
         
         if request.user.is_authenticated:
             check_auth = True
-            
-            sessionDataViewed = request.session.get('viewed')
-            if sessionDataViewed == None:
-                request.session['viewed'] = {}
-                request.session.save()
-            
-            sessionDataLiked = request.session.get('story_like_variable')
-            if sessionDataLiked == None:
-                request.session['story_like_variable'] = {
-                        'dislikes': {},
-                    }
-                request.session.save()
-            
-            sessionDataViewed = request.session.get('viewed')
-            sessionDataLiked = request.session.get('story_like_variable')
-            check_disliked = str(id) in sessionDataLiked['dislikes'].keys()
-        
-                
-            
+
             user_profile = BaseUserProfile.objects.get(user = request.user)
             check_subscription = post.creator_id in user_profile.reader.subscribed_to.all()
             
             if user_profile.writer:
                 check_ownership = post.creator_id == user_profile.writer
-
-            if check_ownership == False:
-                get_reader_posts = UserViewedPosts.objects.get(reader=user_profile.reader)
-                get_reader_liked = UserLikedPosts.objects.get(reader =user_profile.reader)
-                check_liked = post in get_reader_liked.posts.all()
-
-                if post not in get_reader_posts.posts.all():
-                    get_reader_posts.posts.add(post)
-                    get_reader_posts.save()
-                else:
-                    if id not in sessionDataViewed.keys():
-                        sessionDataViewed.update({id: True})
-                        post.creator_id.total_story_views_counter += 1
-                        post.views_counter += 1
-                        post.save()
-                        post.creator_id.save()
-                        get_reader_posts.posts.add(post)
-                        get_reader_posts.save()
-                        request.session.save()
 
             try:
                 check_notified = SubscriptionTimeStampThrough.objects.get(writer = post.creator_id, reader = user_profile.reader).receive_notifications
@@ -452,8 +411,6 @@ class ReactToStory(APIView):
             if user.writer == story.creator_id:
                 return JsonResponse({"success": False, 'reactions': {'likes': story.likes_count, 'dislikes':story.dislikes_count}, 'reason': "You cannot like or dislike your own stories"}) 
         
-        sessionData = request.session.get('story_like_variable')
-        
         react_type = data.get('type', None)
         if react_type == None:
             return Response({"success": False, "data": {}, "message": "No type was provided ('like' or 'dislike' is required)"})
@@ -461,52 +418,13 @@ class ReactToStory(APIView):
         string_story_id = str(story_id)
         
         
-        reader_liked_stories = UserLikedPosts.objects.get(reader = user.reader)
-            
-        if sessionData == None:
-            request.session['story_like_variable'] = {
-                    'dislikes': {},
-                }
-            request.session.save()
-            sessionData = request.session.get('story_like_variable')
-        
         if react_type == 'like':  
-            if story in reader_liked_stories.posts.all():
-                reader_liked_stories.posts.remove(story)
-                story.likes_count -= 1
-                story.creator_id.total_likes_counter -= 1    
-            else:
-                reader_liked_stories.posts.add(story)
-                story.likes_count += 1
-                story.creator_id.total_likes_counter += 1      
-                
-                if string_story_id in sessionData['dislikes'].keys():
-                    story.dislikes_count -= 1
-                    story.creator_id.total_dislikes_counter -= 1
-
-                    sessionData['dislikes'].pop(string_story_id, None)
-        
+            pass
         elif react_type == 'dislike':
-            if string_story_id in sessionData['dislikes'].keys():
-                story.dislikes_count -= 1
-                story.creator_id.total_dislikes_counter -= 1
-                sessionData['dislikes'].pop(string_story_id, None)
-            else:
-                story.dislikes_count += 1
-                story.creator_id.total_dislikes_counter += 1
-                sessionData['dislikes'].update({story_id: True})
-                
-                if story in reader_liked_stories.posts.all():
-                    reader_liked_stories.posts.remove(story)
-                    story.likes_count -= 1
-                    story.creator_id.total_likes_counter -= 1
+            pass
         else:
             return Response({"success": False, "data": {}, "message": "Invalid type provided ('like' or 'dislike' is required)"})       
                     
-        request.session.save()
-        story.save()
-        story.creator_id.save()
-        reader_liked_stories.save()
         #print(sessionData)
         return Response({"success": True, "data": {'likes': story.likes_count, 'dislikes':story.dislikes_count}, "message": ""})   
 
@@ -517,11 +435,11 @@ class GetLikedStories(APIView):
     
     def get(self, request):
         req_page = int(request.GET.get('page', 1))
-        user = BaseUserProfile.objects.get(user = request.user)
+        base_user = BaseUserProfile.objects.get(user = request.user)
         
-        get_viewed = UserLikedPosts.objects.get(reader=user.reader)
+        get_liked = Post.objects.filter(likes = base_user)
         
-        paginated_stories = Paginator(get_viewed.posts.all(), per_page=20)
+        paginated_stories = Paginator(get_liked.posts.all(), per_page=20)
         get_page = paginated_stories.get_page(req_page)
         
 

@@ -22,7 +22,7 @@ class UserStoryCommentedNotification(models.Model):
             'comment_creator': authSerialize.ProfileSerializerForExtras(self.comment.creator_id).data,
             'story': False,
             'story_commented': True,
-            'comment': False,
+            'comment_replied': False,
             'admin': False,
         }
         
@@ -44,7 +44,7 @@ class UserCommentRepliedNotification(models.Model):
             'creator': authSerialize.ProfileSerializerForExtras(self.source.parent_comment_id.creator_id).data,
             'story': False,
             'story_commented': False,
-            'comment': True,
+            'comment_replied': True,
             'admin': False,
         }
         
@@ -61,7 +61,7 @@ class AdministrativeOverallNotifications(models.Model):
             'created': CustomDateTimeField().to_representation(self.created),
             'story': False,
             'story_commented': False,
-            'comment': False,
+            'comment_replied': False,
             'admin': True,
         }
 
@@ -84,7 +84,7 @@ class UserStoryCreatedNotification(models.Model):
             'post_name': self.source.post_title,
             'story': True,
             'story_commented': False,
-            'comment': False,
+            'comment_replied': False,
             'admin': False,
         }
         

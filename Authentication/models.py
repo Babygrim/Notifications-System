@@ -6,17 +6,9 @@ from django.dispatch import receiver
 
 class UserProfileWriter(models.Model):
     writer_pseudo = models.CharField(max_length=100, unique=True)
-    
-    total_likes_counter = models.PositiveBigIntegerField(default=0) 
-    total_dislikes_counter = models.PositiveBigIntegerField(default=0) 
-    total_story_views_counter = models.PositiveBigIntegerField(default=0) 
         
 class UserProfileReader(models.Model):
     subscribed_to = models.ManyToManyField(UserProfileWriter, through='SubscriptionTimeStampThrough')
-
-    total_stories_viewed = models.PositiveBigIntegerField(default=0) 
-    total_comments_made = models.PositiveBigIntegerField(default=0) 
-    total_liked_comments = models.PositiveBigIntegerField(default=0) 
         
     def __str__(self) -> str:
         return super().__str__()

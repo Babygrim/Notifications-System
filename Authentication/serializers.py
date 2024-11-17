@@ -5,6 +5,8 @@ from rest_framework.validators import UniqueValidator
 from .models import BaseUserProfile, UserProfileReader, UserProfileWriter, SubscriptionTimeStampThrough
 from django.contrib.auth.models import User
 import Notifications.models as notificationMod
+import Comments.models as commentsMod
+import Stories.models as storiesMod
 # Create your models here.
 
 class UserSerializer(serializers.ModelSerializer):
@@ -47,14 +49,82 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 class ReaderSerializer(serializers.ModelSerializer):
+    total_stories_viewed = serializers.SerializerMethodField()
+    total_stories_liked = serializers.SerializerMethodField()
+    total_stories_disliked = serializers.SerializerMethodField()
+    
+    total_comments_made = serializers.SerializerMethodField()
+    total_comments_liked = serializers.SerializerMethodField()
+    total_comments_disliked = serializers.SerializerMethodField()
+    
+    total_subscriptions = serializers.SerializerMethodField()
+    
     class Meta:
         model = UserProfileReader
-        fields = ('__all__')
+        fields = ('id', 
+                  'total_stories_viewed', 
+                  'total_stories_liked', 
+                  'total_stories_disliked',
+                  'total_comments_made',
+                  'total_comments_liked',
+                  'total_comments_disliked',
+                  'total_subscriptions')
+    
+    def get_total_comments_made(self, obj):
+        base_user = BaseUserProfile.objects.get(reader = obj)
+        return commentsMod.Comment.objects.filter(creator_id = base_user).count()
+        
+    def get_total_comments_liked(self, obj):
+        base_user = BaseUserProfile.objects.get(reader = obj)
+        return commentsMod.Comment.objects.filter(likes = base_user).count()
+    
+    def get_total_comments_disliked(self, obj):
+        base_user = BaseUserProfile.objects.get(reader = obj)
+        return commentsMod.Comment.objects.filter(dislikes = base_user).count()
+    
+    def get_total_stories_viewed(self, obj):
+        base_user = BaseUserProfile.objects.get(reader = obj)
+        return storiesMod.Post.objects.filter(views = base_user).count()
+    
+    def get_total_stories_liked(self, obj):
+        base_user = BaseUserProfile.objects.get(reader = obj)
+        return storiesMod.Post.objects.filter(likes = base_user).count()
+    
+    def get_total_stories_disliked(self, obj):
+        base_user = BaseUserProfile.objects.get(reader = obj)
+        return storiesMod.Post.objects.filter(dislikes = base_user).count()
+    
+    def get_total_subscriptions(self, obj):
+        return obj.subscribed_to.all().count()
         
 class WriterSerializer(serializers.ModelSerializer):
+    total_stories_made = serializers.SerializerMethodField()
+    total_story_views = serializers.SerializerMethodField()
+    total_story_likes = serializers.SerializerMethodField()
+    total_story_dislikes = serializers.SerializerMethodField()
+    total_subscribers = serializers.SerializerMethodField()
+    
     class Meta:
         model = UserProfileWriter
         fields = ('__all__')
+        
+    def get_total_stories_made(self, obj):
+        return storiesMod.Post.objects.filter(creator_id = obj).count()
+    
+    def get_total_story_views(self, obj):
+        all_made = storiesMod.Post.objects.filter(creator_id = obj)        
+        return sum([post.views.all().count() for post in all_made])
+    
+    def get_total_story_likes(self, obj):
+        all_made = storiesMod.Post.objects.filter(creator_id = obj)        
+        return sum([post.likes.all().count() for post in all_made])
+    
+    def get_total_story_dislikes(self, obj):
+        all_made = storiesMod.Post.objects.filter(creator_id = obj)        
+        return sum([post.dislikes.all().count() for post in all_made])
+    
+    def get_total_subscribers(self, obj):
+        return UserProfileReader.objects.filter(subscribed_to = obj).count()
 
 class ProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer()

@@ -1,9 +1,9 @@
 from django.db import models
 from Authentication.models import UserProfileReader, UserProfileWriter, BaseUserProfile
-from Notifications.models import UserStoryCreatedNotification
+import Notifications.models as notificationMod
+import Comments.models as commentMod
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from Comments.models import Comment
 from django.utils import timezone
 # Create your models here.
 
@@ -17,7 +17,7 @@ class PostTags(models.Model):
     tag = models.CharField(max_length=30, unique=True)
         
     def __str__(self):
-        return self.title
+        return self.tag
     
 class Post(models.Model):
     creator_id = models.ForeignKey(UserProfileWriter, on_delete=models.CASCADE)
@@ -27,7 +27,6 @@ class Post(models.Model):
     post_text = models.TextField(null = False)
     post_description = models.CharField(max_length=100, default="No Description")
     
-    comments_count = models.PositiveBigIntegerField(default=0)
     created = models.DateTimeField(default=timezone.now)            
     likes = models.ManyToManyField(BaseUserProfile, related_name="story_likes")
     dislikes = models.ManyToManyField(BaseUserProfile, related_name="story_dislikes")
@@ -58,7 +57,7 @@ class Post(models.Model):
             "body": self.post_text,
             'likes_count': self.likes_count,
             'dislikes_count': self.dislikes_count,
-            'comments_count': Comment.objects.filter(post=self, parent_comment=None).count(),
+            'comments_count': commentMod.Comment.objects.filter(post=self, parent_comment=None).count(),
             'created_at': self.whenAdded(),
             'views_counter': self.views_counter,
         }
@@ -87,7 +86,7 @@ class Post(models.Model):
 def story_created(sender, instance, created, **kwargs):
     if created:
         if UserProfileReader.objects.filter(subscribed_to = instance.creator_id).count() > 0:
-            notification = UserStoryCreatedNotification(creator=instance.creator_id, source=instance)
+            notification = notificationMod.UserStoryCreatedNotification(creator=instance.creator_id, source=instance)
             notification.save()
             print("Server: Writer has >0 Subscribers. Notification Created.")
         else:

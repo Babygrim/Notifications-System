@@ -35,6 +35,9 @@ class StoriesSerializer(serializers.ModelSerializer):
     genre = StoryMetaGenreSerializer()
     tags = StoryMetaTagSerializer(many=True)
     post_image = serializers.SerializerMethodField()
+    likes_count = serializers.SerializerMethodField()
+    dislikes_count = serializers.SerializerMethodField()
+    views_count = serializers.SerializerMethodField()
     
     class Meta:
         model = Post
@@ -45,6 +48,15 @@ class StoriesSerializer(serializers.ModelSerializer):
     
     def get_post_image(self, obj):
         return obj.post_image.url
+    
+    def get_likes_count(self, obj):
+        return obj.likes.all().count()
+    
+    def get_dislikes_count(self, obj):
+        return obj.dislikes.all().count()
+    
+    def get_views_count(self, obj):
+        return obj.views.all().count()
          
 class AllStorySerializer(serializers.ModelSerializer):
     creator_id = serializers.SerializerMethodField()
@@ -52,6 +64,9 @@ class AllStorySerializer(serializers.ModelSerializer):
     genre = StoryMetaGenreSerializer()
     tags = StoryMetaTagSerializer(many=True)
     post_image = serializers.SerializerMethodField()
+    likes_count = serializers.SerializerMethodField()
+    dislikes_count = serializers.SerializerMethodField()
+    views_count = serializers.SerializerMethodField()
     
     class Meta:
         model = Post
@@ -64,7 +79,7 @@ class AllStorySerializer(serializers.ModelSerializer):
                   'created',
                   'likes_count',
                   'dislikes_count',
-                  'views_counter',
+                  'views_count',
                   'genre',
                   'tags')
     
@@ -73,3 +88,12 @@ class AllStorySerializer(serializers.ModelSerializer):
     
     def get_post_image(self, obj):
         return obj.post_image.url
+    
+    def get_likes_count(self, obj):
+        return obj.likes.all().count()
+    
+    def get_dislikes_count(self, obj):
+        return obj.dislikes.all().count()
+    
+    def get_views_count(self, obj):
+        return obj.views.all().count()
