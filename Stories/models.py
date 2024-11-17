@@ -29,9 +29,9 @@ class Post(models.Model):
     
     comments_count = models.PositiveBigIntegerField(default=0)
     created = models.DateTimeField(default=timezone.now)            
-    likes_count = models.PositiveBigIntegerField(default=0)
-    dislikes_count = models.PositiveBigIntegerField(default=0)
-    views_counter = models.PositiveBigIntegerField(default=0)
+    likes = models.ManyToManyField(BaseUserProfile, related_name="story_likes")
+    dislikes = models.ManyToManyField(BaseUserProfile, related_name="story_dislikes")
+    views = models.ManyToManyField(BaseUserProfile, related_name="story_views")
     
     genre = models.ForeignKey(PostGenre, on_delete=models.DO_NOTHING, null=False)
     tags = models.ManyToManyField(PostTags)
@@ -63,50 +63,25 @@ class Post(models.Model):
             'views_counter': self.views_counter,
         }
         
-        
-class UserLikedPosts(models.Model):
-    reader = models.ForeignKey(UserProfileReader, on_delete=models.CASCADE)
-    posts = models.ManyToManyField(Post)
+# class UserLikedPosts(models.Model):
+#     reader = models.ForeignKey(UserProfileReader, on_delete=models.CASCADE)
+#     posts = models.ManyToManyField(Post)
     
-    def serializer_all(self):
-        return {
-            "id": self.id,
-            "posts": [elem.serializer_all() for elem in self.posts],
-        }
+#     def serializer_all(self):
+#         return {
+#             "id": self.id,
+#             "posts": [elem.serializer_all() for elem in self.posts],
+#         }
         
-class UserViewedPosts(models.Model):
-    reader = models.ForeignKey(UserProfileReader, on_delete=models.CASCADE)
-    posts = models.ManyToManyField(Post)
+# class UserViewedPosts(models.Model):
+#     reader = models.ForeignKey(UserProfileReader, on_delete=models.CASCADE)
+#     posts = models.ManyToManyField(Post)
     
-    def serializer_all(self):
-        return {
-            "id": self.id,
-            "posts": [elem.serializer_all() for elem in self.posts],
-        }
-    
-
-@receiver(post_save, sender=BaseUserProfile)
-def user_created(sender, instance, created, **kwargs):
-    if created:      
-        msg = "Server: "
-        
-        try:
-            UserViewedPosts.objects.get(reader = instance.reader)
-            msg += "Viewed posts instances already exist. "
-        except UserViewedPosts.DoesNotExist:
-            viewed = UserViewedPosts(reader = instance.reader)
-            viewed.save()
-            msg += "Viewed posts instance created successfully. "
-            
-        try:
-            UserLikedPosts.objects.get(reader = instance.reader)
-            msg += "Liked posts instances already exist. "
-        except UserLikedPosts.DoesNotExist:
-            liked = UserLikedPosts(reader = instance.reader)
-            liked.save()
-            msg += "Liked posts instance created successfully. "
-        
-        print(msg)
+#     def serializer_all(self):
+#         return {
+#             "id": self.id,
+#             "posts": [elem.serializer_all() for elem in self.posts],
+#         }
         
 @receiver(post_save, sender=Post)
 def story_created(sender, instance, created, **kwargs):

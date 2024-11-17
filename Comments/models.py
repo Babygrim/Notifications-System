@@ -13,15 +13,15 @@ class Comment(models.Model):
     parent_comment_id = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True)
     
     created = models.DateTimeField(default=now)            
-    likes_count = models.PositiveBigIntegerField(default=0)
-    dislikes_count = models.PositiveBigIntegerField(default=0)
+    likes = models.ManyToManyField(BaseUserProfile, related_name="comm_likes")
+    dislikes = models.ManyToManyField(BaseUserProfile, related_name="comm_dislikes")
          
-    def serialize_update(self):
-        return {
-            'replies_count': Comment.objects.filter(parent_comment = self).count(),
-            'likes_count':self.likes_count,
-            'dislikes_count':self.dislikes_count,
-        }
+    # def serialize_update(self):
+    #     return {
+    #         'replies_count': Comment.objects.filter(parent_comment = self).count(),
+    #         'likes_count':self.likes_count,
+    #         'dislikes_count':self.dislikes_count,
+    #     }
 
 @receiver(post_save, sender=Comment)
 def comment_created(sender, instance, created, **kwargs):
