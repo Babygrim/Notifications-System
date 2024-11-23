@@ -132,7 +132,7 @@ class ManipulateStory(APIView):
                 
         create_story.save()
         
-        return Response({"success": True, "data": {}, "message": "story created successfully"})
+        return Response({"success": True, "data": StoriesSerializer(create_story).data, "message": "story created successfully"})
             
     def patch(self, request):
         data = request.data
@@ -203,7 +203,7 @@ class ManipulateStory(APIView):
                 story.tags.add(tag)
 
         story.save()
-        return Response({"success": True, "data": {}, "message": "Story updated successfully. " + msg})
+        return Response({"success": True, "data": StoriesSerializer(story).data, "message": "Story updated successfully. " + msg})
 
     def delete(self, request):
         story_id = request.data.get("story_id", None)
