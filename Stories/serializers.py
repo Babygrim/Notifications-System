@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from TestProject.serializers import CustomDateTimeField
-from Authentication.serializers import AllStoryWriterSerializer
+from Authentication.serializers import SingelStoryWriterSerializer, AllStoryWriterSerializer
 from .models import Post, PostGenre, PostTags
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -29,7 +29,7 @@ class StoryMetaTagSerializer(serializers.ModelSerializer):
         fields = ('__all__')
         
 class StoriesSerializer(serializers.ModelSerializer):
-    creator_id = AllStoryWriterSerializer
+    creator_id = SingelStoryWriterSerializer()
     created = CustomDateTimeField()
     genre = StoryMetaGenreSerializer()
     tags = StoryMetaTagSerializer(many=True)

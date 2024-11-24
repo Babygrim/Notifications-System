@@ -513,7 +513,6 @@ def tokenizeSearch(search_request):
 
     return search_query
 
-
 def build_reader_profile_response_data(user, initial_query, search=False):
     base_user = BaseUserProfile.objects.get(user = user)
     

@@ -199,3 +199,15 @@ class AllStoryWriterSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfileWriter
         fields = ('id', 'writer_pseudo')
+
+class SingelStoryWriterSerializer(serializers.ModelSerializer):
+    avatar = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = UserProfileWriter
+        fields = ('id', 'writer_pseudo', 'avatar')    
+
+    def get_avatar(self, obj):
+        base = BaseUserProfile.objects.get(writer=obj)
+        
+        return base.avatar.url
