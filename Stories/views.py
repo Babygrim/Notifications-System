@@ -13,6 +13,9 @@ from .serializers import StoriesSerializer, GenreSerializer, TagSerializer, AllS
 from .permissions import IsAuthenticatedWriter
 from functools import reduce
 import operator
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models import Value
 
 #Fetch all stories there is (plus search)
 class GetAllStories(APIView):
@@ -56,21 +59,27 @@ class GetAllStories(APIView):
                         output_field=IntegerField())
                 )
             stories = Post.objects.annotate(num_matches=sum(case_list))
-            matches_median = median(stories.values_list('num_matches', flat=True))
-
             
+            matches_median = median(stories.values_list('num_matches', flat=True))
+            
+            # if request.user.is_authenticated:
+            #     stories = stories.filter(filter_conditions & Q(num_matches__gt = (matches_median / 2)**2)).annotate(priority=Value(4, output_field=models.IntegerField()))
+            # else:
             stories = stories.filter(filter_conditions & Q(num_matches__gt = (matches_median / 2)**2)).order_by("-num_matches")
            
             #stories = stories.filter(filter_conditions).order_by("-num_matches")
         else:
             if sort_by == 'likes_count' or sort_by == '-likes_count':
-                stories = Post.objects.filter(filter_conditions).alias(likes_count = Count('likes')).order_by(sort_by)
+                stories = Post.objects.filter(filter_conditions).alias(likes_count = Count('likes')).order_by(sort_by).annotate(priority=Value(2, output_field=models.IntegerField()))
             elif sort_by == 'views_counter' or sort_by == '-views_counter':
-                stories = Post.objects.filter(filter_conditions).alias(views_counter = Count('views')).order_by(sort_by)
+                stories = Post.objects.filter(filter_conditions).alias(views_counter = Count('views')).order_by(sort_by).annotate(priority=Value(2, output_field=models.IntegerField()))
             else:
-                stories = Post.objects.filter(filter_conditions).order_by(sort_by)
+                stories = Post.objects.filter(filter_conditions).order_by(sort_by).annotate(priority=Value(2, output_field=models.IntegerField()))
+            
+            # if request.user.is_authenticated and req_page == 1:
+            #     stories = build_reader_profile_response_data(request.user, stories, False)
              
-        paginated_stories = Paginator(stories, per_page=20)
+        paginated_stories = Paginator(stories[:200], per_page=20)
         get_page = paginated_stories.get_page(req_page)
         
 
@@ -503,3 +512,63 @@ def tokenizeSearch(search_request):
             search_query[q_query] = len(key2)
 
     return search_query
+
+
+def build_reader_profile_response_data(user, initial_query, search=False):
+    base_user = BaseUserProfile.objects.get(user = user)
+    
+    subscriptions = base_user.reader.subscribed_to.all()
+    liked = Post.objects.filter(likes=base_user)
+    viewed = Post.objects.filter(views=base_user)
+
+    if search:
+        return initial_query
+    else:
+        one_week_ago = timezone.now() - timedelta(weeks=1)
+        get_subscription_newest = Post.objects.filter(creator_id__in=subscriptions, created__gte=one_week_ago).exclude(views=base_user).annotate(priority=Value(4, output_field=models.IntegerField())).order_by("-created")
+
+        prefered_genres = dict()
+        prefered_tags = dict()
+        combined_dataset = liked.union(viewed)
+        
+        for post in combined_dataset:
+            if post.tags in prefered_tags.keys():
+                prefered_genres[post.tags] += 1
+            else:
+                prefered_genres[post.tags] = 1
+                
+            if post.genre in prefered_genres.keys():
+                prefered_genres[post.genre] += 1
+            else:
+                prefered_genres[post.genre] = 1
+
+        # viewed / liked ratio - % of viewed posts that user liked - haven't found a use for this yet :(
+        # satisfaction_rate = len(combined_dataset) / (len(liked) + len(viewed)) if len(combined_dataset) > 0 else 1
+        
+        try:
+            # get median of all watched and liked tags
+            genres_rate = sum(prefered_genres.values()) / len(prefered_genres)
+            tags_rate = sum(prefered_tags.values()) / len(prefered_tags)
+            
+            # fetch most viewed genres and tags
+            prefered_genres = [key for key in prefered_genres.keys() if prefered_genres[key] >= genres_rate]
+            prefered_tags = [key for key in prefered_tags.keys() if prefered_tags[key] >= tags_rate]
+
+            prefered_prediction = Post.objects.filter(Q(genre__in=prefered_genres) | Q(tags__in=prefered_tags))
+            
+            final_dataset = (initial_query | get_subscription_newest | prefered_prediction).distinct().order_by("-priority")
+        except ZeroDivisionError:
+            final_dataset = (initial_query | get_subscription_newest).distinct().order_by("-priority")
+        
+        return final_dataset
+
+        
+    
+    
+    
+    
+    
+    
+    
+    
+    

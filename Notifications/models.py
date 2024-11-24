@@ -77,10 +77,10 @@ class UserStoryCreatedNotification(models.Model):
     def serialize(self):
         return {
             'id':self.id,
-            'creator_id': self.creator_id.id,
-            'creator_username': self.creator_id.writer_pseudo,
+            'creator_id': self.creator.id,
+            'creator_username': self.creator.writer_pseudo,
             'created': CustomDateTimeField().to_representation(self.created),
-            'postId': self.source.id,
+            'post_id': self.source.id,
             'post_name': self.source.post_title,
             'story': True,
             'story_commented': False,
