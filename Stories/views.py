@@ -90,7 +90,7 @@ class GetAllStories(APIView):
                     "has_next": get_page.has_next(),
                     "has_previous": get_page.has_previous(),
                 },
-                "stories": AllStorySerializer(get_page.object_list, many=True).data
+                "stories": AllStorySerializer(get_page.object_list, many=True, context={'request': request}).data
         }
         
         return Response({"success": True, "data": response, "message": ""})
@@ -318,7 +318,7 @@ class GetWriterStories(APIView):
                     "has_next": get_page.has_next(),
                     "has_previous": get_page.has_previous(),
                 },
-                "stories": AllStorySerializer(get_page.object_list, many=True).data
+                "stories": AllStorySerializer(get_page.object_list, many=True, context={'request': request}).data
         }
         
         return Response({"success": True, "data": response, "message": ""})
@@ -345,7 +345,7 @@ class GetViewHistory(APIView):
                 "has_next": get_page.has_next(),
                 "has_previous": get_page.has_previous(),
             },
-            "stories": AllStorySerializer(get_page.object_list, many=True).data
+            "stories": AllStorySerializer(get_page.object_list, many=True, context={'request': request}).data
         }
         
         return Response({"success": True, "data": response, "message": ""})
@@ -481,7 +481,7 @@ class GetLikedStories(APIView):
                 "has_next": get_page.has_next(),
                 "has_previous": get_page.has_previous(),
             },
-            "stories": AllStorySerializer(get_page.object_list, many=True).data
+            "stories": AllStorySerializer(get_page.object_list, many=True, context={'request': request}).data
         }
         
         return Response({"success": True, "data": response, "message": ""})

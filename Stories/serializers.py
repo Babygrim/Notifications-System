@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from TestProject.serializers import CustomDateTimeField
+from Authentication.models import BaseUserProfile
 from Authentication.serializers import SingelStoryWriterSerializer, AllStoryWriterSerializer
 from .models import Post, PostGenre, PostTags
 
@@ -78,6 +79,9 @@ class AllStorySerializer(serializers.ModelSerializer):
     dislikes_count = serializers.SerializerMethodField()
     views_count = serializers.SerializerMethodField()
     
+    liked = serializers.SerializerMethodField()
+    disliked = serializers.SerializerMethodField()
+    
     class Meta:
         model = Post
         fields = ('id',
@@ -90,7 +94,9 @@ class AllStorySerializer(serializers.ModelSerializer):
                   'dislikes_count',
                   'views_count',
                   'genre',
-                  'tags')
+                  'tags',
+                  'liked',
+                  'disliked')
         
     def get_post_image(self, obj):
         return obj.post_image.url
@@ -103,3 +109,22 @@ class AllStorySerializer(serializers.ModelSerializer):
     
     def get_views_count(self, obj):
         return obj.views.all().count()
+
+    # Flags
+    def get_liked(self, obj):
+        request = self.context.get('request')
+        
+        if request.user.is_authenticated:
+            base_user = BaseUserProfile.objects.get(user = request.user)
+            return base_user in obj.likes.all()
+        else:
+            return False
+    
+    def get_disliked(self, obj):
+        request = self.context.get('request')
+        
+        if request.user.is_authenticated:
+            base_user = BaseUserProfile.objects.get(user = request.user)
+            return base_user in obj.dislikes.all()
+        else:
+            return False

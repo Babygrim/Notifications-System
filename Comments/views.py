@@ -108,7 +108,6 @@ class CreateComments(APIView):
                 create_notification = UserCommentRepliedNotification(receiver = user_to_notify, source = reply_to_comment, parent_source = story)
                 create_notification.save()
             
-            story.comments_count += 1
             story.save()   
             return Response({"success": True, "data": {}, "message": "reply created successfully"})
         
@@ -131,7 +130,6 @@ class CreateComments(APIView):
                 create_notification = UserStoryCommentedNotification(receiver = story.creator_id, source = story, comment = comment)
                 create_notification.save()
 
-            story.comments_count += 1
             story.save()   
             return Response({"success": True, "data": {}, "message": "comment created successfully"})
         
