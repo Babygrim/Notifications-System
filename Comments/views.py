@@ -109,7 +109,7 @@ class CreateComments(APIView):
                 create_notification.save()
             
             story.save()   
-            return Response({"success": True, "data": {}, "message": "reply created successfully"})
+            return Response({"success": True, "data": CommentSerializer(reply_to_comment, context={'request': request}).data, "message": "reply created successfully"})
         
         # creating main comment
         elif story_id:
@@ -131,7 +131,7 @@ class CreateComments(APIView):
                 create_notification.save()
 
             story.save()   
-            return Response({"success": True, "data": {}, "message": "comment created successfully"})
+            return Response({"success": True, "data": CommentSerializer(comment, context={'request': request}).data, "message": "comment created successfully"})
         
 
     def delete(self, request):
