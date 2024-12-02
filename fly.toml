@@ -1,0 +1,30 @@
+# fly.toml app configuration file generated for notifications-system on 2024-12-02T18:19:32+02:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'notifications-system'
+primary_region = 'waw'
+console_command = '/code/manage.py shell'
+
+[build]
+
+[env]
+  PORT = '8000'
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+[[vm]]
+  memory = '2gb'
+  cpu_kind = 'shared'
+  cpus = 2
+
+[[statics]]
+  guest_path = '/code/static'
+  url_prefix = '/static/'

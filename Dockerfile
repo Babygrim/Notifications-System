@@ -9,6 +9,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Копіювання коду
 COPY . .
 
-# Експортуємо порт і запускаємо сервер
+# Експортуємо порт
 EXPOSE 8000
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+# Запуск міграцій і серверу
+CMD ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
